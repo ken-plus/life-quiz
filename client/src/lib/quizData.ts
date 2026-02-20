@@ -234,28 +234,32 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   },
 ];
 
-export const LIFE_TYPES: Record<OperatingStyle, { name: string; displayName: string; color: string; accentColor: string }> = {
+export const LIFE_TYPES: Record<OperatingStyle, { name: string; displayName: string; roleTitle: string; color: string; accentColor: string }> = {
   guardian: {
     name: 'guardian',
-    displayName: '家庭防線型',
+    displayName: '時光整理師',
+    roleTitle: '把散落的碎片，放回它本來的位置',
     color: '#C9A876',
     accentColor: '#A0826D',
   },
   balancer: {
     name: 'balancer',
-    displayName: '邊界能量型',
+    displayName: '能量建築師',
+    roleTitle: '先清出呼吸的空間，再談下一步的結構',
     color: '#7BA89F',
     accentColor: '#5F8B84',
   },
   explorer: {
     name: 'explorer',
-    displayName: '可能性試驗型',
+    displayName: '生命航行引水人',
+    roleTitle: '迷路也是一種抵達，願意就有路可走',
     color: '#D4A574',
     accentColor: '#B88A5C',
   },
   builder: {
     name: 'builder',
-    displayName: '系統累積型',
+    displayName: '秩序累積者',
+    roleTitle: '緩慢但篤定，每一步都在為未來鋪路',
     color: '#8B9D6F',
     accentColor: '#6B7D54',
   },
