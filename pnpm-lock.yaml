@@ -7189,4 +7189,4 @@ snapshots:
 
   zod@4.1.12: {}
 
-  zwitch@2.0.4: {}
+  zwitch@2.0.4: {fix: add analytics and speed insights}
