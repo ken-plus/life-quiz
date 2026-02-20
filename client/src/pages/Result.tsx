@@ -13,11 +13,11 @@ import { RESULT_CONTENTS } from '@/lib/resultContent';
 import { useLocation } from 'wouter';
 import { Share2, ArrowLeft, ChevronRight, ChevronLeft, Copy, Check } from 'lucide-react';
 
-const resultImages: Record<string, string> = {
-  guardian: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/TxuoMhDJoinJriHT.png',
-  balancer: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/xVMFxelvLByPoDQF.png',
-  explorer: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/gWtddQHmLXBrIAVS.png',
-  builder: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/OnEDXHYGpnMVDoVS.jpeg',
+const resultImages = {
+  guardian: '/lifecode-result-guardian.PNG',
+  balancer: '/lifecode-result-balancer.PNG',
+  explorer: '/lifecode-result-explorer.PNG',
+  builder: '/lifecode-result-Builder.jpg',
 };
 
 export default function Result() {
