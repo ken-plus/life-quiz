@@ -67,7 +67,7 @@ export default function Quiz() {
       <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container py-4">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-semibold text-foreground">你的生活密碼</h1>
+            <h1 className="text-lg font-semibold text-foreground">時光整理所</h1>
             <span className="text-sm text-muted-foreground">
               {currentQuestionIndex + 1} / {QUIZ_QUESTIONS.length}
             </span>
