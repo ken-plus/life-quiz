@@ -82,7 +82,7 @@ export default function Landing() {
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">
               我們把生活中那些真實的小瞬間，
               <br />
-              整理成 21 個日常選擇
+              整理成 34 個日常選擇
             </h2>
 
             <div className="space-y-4 text-foreground/80 leading-relaxed">
