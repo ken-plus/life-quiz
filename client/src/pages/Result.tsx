@@ -1,276 +1,173 @@
 /**
- * 《你的生活密碼》結果頁面
- * 設計風格：入戲落地、心理安全、分享誘因
- * 布局：圖片置頂 → 標題與圖視覺合一 → 分頁展示（核心內容 / 行動建議）
- * 視覺：四種類型的代表插圖 + 卡片風格分享設計
+ * 《把混亂整理成秩序》結果頁文案
+ * 設計風格：時光整理所 × 有溫度的秩序感 × 去評判 × 儀式感
+ * nextSteps 對應四個入口：理順自己 / 理順關係 / 理順世界 / 理順未來
  */
 
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { LIFE_TYPES, calculateLifeType, QUIZ_QUESTIONS, OperatingStyle } from '@/lib/quizData';
-import { RESULT_CONTENTS } from '@/lib/resultContent';
-import { useLocation } from 'wouter';
-import { Share2, ArrowLeft, ChevronRight, ChevronLeft, Copy, Check } from 'lucide-react';
+import { OperatingStyle } from './quizData';
 
-const resultImages: Record<string, string> = {
-  guardian: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/TxuoMhDJoinJriHT.png',
-  balancer: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/xVMFxelvLByPoDQF.png',
-  explorer: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/gWtddQHmLXBrIAVS.png',
-  builder: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/OnEDXHYGpnMVDoVS.jpeg',
-};
-
-export default function Result() {
-  const [, navigate] = useLocation();
-  const [lifeType, setLifeType] = useState<OperatingStyle | null>(null);
-  const [answers, setAnswers] = useState<Record<number, OperatingStyle> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1); // 1: 核心內容, 2: 行動建議
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    // 從URL參數中獲取答案
-    const params = new URLSearchParams(window.location.search);
-    const answersParam = params.get('answers');
-
-    if (answersParam) {
-      try {
-        const parsedAnswers = JSON.parse(decodeURIComponent(answersParam));
-        setAnswers(parsedAnswers);
-        const type = calculateLifeType(parsedAnswers);
-        setLifeType(type);
-      } catch (error) {
-        console.error('Failed to parse answers:', error);
-        navigate('/');
-      }
-    } else {
-      navigate('/');
-    }
-
-    setIsLoading(false);
-  }, [navigate]);
-
-  if (isLoading || !lifeType || !answers) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">載入中...</p>
-      </div>
-    );
-  }
-
-  const type = LIFE_TYPES[lifeType as OperatingStyle];
-  const content = RESULT_CONTENTS[lifeType];
-
-  const handleShare = () => {
-    const text = `${content.shareText}\n\n探索你的生活密碼：`;
-    if (navigator.share) {
-      navigator.share({
-        title: '你的生活密碼',
-        text: text,
-        url: window.location.origin,
-      });
-    } else {
-      // Fallback: 複製到剪貼板
-      navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleCopyShareText = () => {
-    const text = `${content.shareText}\n\n探索你的生活密碼：${window.location.origin}`;
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container py-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            重新開始
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container py-12">
-        <div className="max-w-2xl mx-auto">
-          {/* Page 1: Core Identity */}
-          {currentPage === 1 && (
-            <>
-              {/* Result Image - Positioned at top with title overlay */}
-              <div className="mb-12 relative">
-                <img
-                  src={resultImages[lifeType]}
-                  alt={content.title}
-                  className="w-full rounded-xl shadow-lg"
-                />
-                {/* Title merged with image - positioned at bottom of image */}
-                <div className="mt-6">
-                  <h1 className="text-3xl font-bold text-foreground mb-2">{content.title}</h1>
-                  <p className="text-lg text-muted-foreground">{content.subtitle}</p>
-                </div>
-              </div>
-
-              {/* Identity Locking - Introduction */}
-              <div className="mb-10">
-                <Card className="p-8 border-border bg-card">
-                  <p className="text-foreground leading-relaxed whitespace-pre-line">
-                    {content.introduction.replace(/試試看/g, '陪你探索')}
-                  </p>
-                </Card>
-              </div>
-
-              {/* Life Recognition - Self Awareness */}
-              <div className="mb-10">
-                <h2 className="text-2xl font-semibold text-foreground mb-6">你的生活樣貌</h2>
-                <Card className="p-8 border-border bg-card">
-                  <p className="text-foreground leading-relaxed whitespace-pre-line">
-                    {content.selfAwareness.replace(/不上不下/g, '穩定且有力量')}
-                  </p>
-                </Card>
-              </div>
-
-              {/* Emotional Depth - Inner Quote */}
-              <div className="mb-12 text-center">
-                <div className="inline-block border-l-4 pl-6" style={{ borderColor: type.color }}>
-                  <p className="text-xl font-semibold text-foreground italic">
-                    {content.selfAwareness.split('\n').pop()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Pagination Navigation */}
-              <div className="flex justify-between items-center mt-12 pt-8 border-t border-border">
-                <div className="text-sm text-muted-foreground">第 1 / 2 頁</div>
-                <Button
-                  onClick={() => setCurrentPage(2)}
-                  className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
-                >
-                  下一步
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </>
-          )}
-
-          {/* Page 2: Action & Sharing */}
-          {currentPage === 2 && (
-            <>
-              {/* Tips - Small Changes */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-8">三步微行動</h2>
-                <div className="space-y-6">
-                  {content.tips.map((tip, index) => (
-                    <Card key={index} className="p-6 border-border bg-card hover:shadow-md transition-shadow">
-                      <div className="flex gap-4">
-                        <div
-                          className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                          style={{ backgroundColor: type.accentColor }}
-                        >
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-2 text-lg">{tip.title}</h3>
-                          <p className="text-foreground/80 mb-3 leading-relaxed">{tip.description}</p>
-                          <p className="text-sm font-medium" style={{ color: type.color }}>
-                            {tip.timeframe}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sharing Section - Improved Card Design */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-6">分享你的發現</h2>
-                <Card className="p-8 border-border bg-card">
-                  <p className="text-foreground leading-relaxed mb-8 whitespace-pre-line">
-                    {content.sharingPrompt.replace(/試試看/g, '陪你探索')}
-                  </p>
-                  
-                  {/* Share Card Preview */}
-                  <div className="mb-8 p-6 rounded-lg bg-background border-2 border-dashed border-border">
-                    <p className="text-center text-foreground font-semibold mb-4">{content.shareText}</p>
-                    <p className="text-center text-sm text-muted-foreground">陪你探索你的生活密碼</p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="space-y-3">
-                    <Button
-                      onClick={handleShare}
-                      className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-base"
-                    >
-                      <Share2 className="w-5 h-5" />
-                      分享給朋友
-                    </Button>
-                    <Button
-                      onClick={handleCopyShareText}
-                      variant="outline"
-                      className="w-full gap-2 py-6 text-base"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-5 h-5" />
-                          已複製
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-5 h-5" />
-                          複製分享文案
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Next Steps - Learn More */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-6">了解更多</h2>
-                <Card className="p-8 border-border bg-card">
-                  <p className="text-foreground leading-relaxed mb-8">{content.nextSteps}</p>
-                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-base">
-                    探索完整指南
-                  </Button>
-                </Card>
-              </div>
-
-              {/* Footer Note - Improved */}
-              <div className="text-center text-sm text-muted-foreground mb-12 p-6 rounded-lg bg-background border border-border">
-                <p>
-                  這份問卷基於你的天賦與傾向設計，
-                  <br />
-                  呈現你在生活中自然展現的力量與陪伴感。
-                </p>
-              </div>
-
-              {/* Pagination Navigation */}
-              <div className="flex justify-between items-center mt-12 pt-8 border-t border-border">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage(1)}
-                  className="gap-2"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  上一步
-                </Button>
-                <div className="text-sm text-muted-foreground">第 2 / 2 頁</div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+export interface ResultContent {
+  title: string;
+  subtitle: string;
+  introduction: string;
+  selfAwareness: string;
+  tips: Array<{
+    title: string;
+    description: string;
+    timeframe: string;
+  }>;
+  sharingPrompt: string;
+  shareText: string;
+  nextSteps: string;
+  nextStepsCTA: string;
+  lineOAUrl: string;
 }
+
+// 🔧 請將此處替換為正式 LINE OA 網址
+export const LINE_OA_URL = 'https://lin.ee/XXXXXXX';
+
+export const RESULT_CONTENTS: Record<OperatingStyle, ResultContent> = {
+  guardian: {
+    title: '此刻的你，是一位時光整理師',
+    subtitle: '你不是想太多。你只是比別人更早感知到，什麼東西快要散了。',
+    introduction:
+      '給你七分鐘，把散落的時間碎片放回它本該在的位置。\n\n你大概會：\n習慣先確認別人有沒有準備好，才放心往前走\n出門前還在想有沒有忘記什麼\n用一樣東西之前，會停下來先看看\n幫別人安排，比幫自己安排更自然\n\n這些不是焦慮，是你在替整個空間把關。',
+    selfAwareness:
+      '你很少真正放下那道防線。\n\n即使在休息，腦子裡還是有一個角落在默默確認：所有人都好嗎？還有什麼沒整理好？\n\n但在時光整理所，我們想先問你一件事——\n在你把別人的碎片都放好之前，有沒有人幫你整理過？\n\n整理的起點：先讓自己安頓，才能幫別人安頓。',
+    tips: [
+      {
+        title: '今天：挑一件你一直「先放著」的事，給它一個位置',
+        description:
+          '不需要解決，只需要給它一個位置。寫下來，放進一個資料夾，或者只是說出聲音。讓它從「漂浮」變成「已知」。',
+        timeframe: '今天',
+      },
+      {
+        title: '這週：列出三件讓你有安全感的日常慣例',
+        description:
+          '這不是清單，是你為自己設計的秩序感。當一切都亂的時候，這三件事會是你的錨點。',
+        timeframe: '這週',
+      },
+      {
+        title: '這個月：把守護的力氣，從「預防一切」轉向「信任結構」',
+        description:
+          '你不需要全部都擔。有時候，建立一個流程讓事情自己運作，比每次親自確認更能讓你放心。',
+        timeframe: '這個月',
+      },
+    ],
+    sharingPrompt:
+      '接下來三天，留意你在做決定前，心裡那個先停頓一下的瞬間。\n\n那個瞬間不是猶豫，是你在做整理。\n\n當你開始看見它，你就知道——這不是測驗。這是你。',
+    shareText: '我是時光整理師，你現在是哪一型？',
+    nextSteps:
+      '理順自己，是所有理順的地基。\n\n身體穩了，節奏才會回來。如果你準備好想知道接下來 14 天可以做什麼，我在 LINE 這裡等你。',
+    nextStepsCTA: '開始理順自己 →',
+    lineOAUrl: LINE_OA_URL,
+  },
+
+  balancer: {
+    title: '此刻的你，是一位能量建築師',
+    subtitle: '你很清楚一件事：沒有呼吸的空間，什麼結構都撐不住。',
+    introduction:
+      '先拆掉遮蔽物，留出光與呼吸，再談你的下一步結構。\n\n你可能會：\n在開始新事情之前，需要先把現在的事情清乾淨\n對消耗你能量的環境特別敏感\n一天裡一定要有一段只屬於自己的安靜時刻\n覺得「狀態好」比「做了什麼」更重要\n\n這些不是要求太多，是你對自己運作方式的誠實。',
+    selfAwareness:
+      '你不是自私，你只是知道：沒有能量，長期就不存在。\n\n當你把自己的能量邊界守得好，你才能真正持續地陪伴別人，而不是燃燒殆盡後消失。\n\n在時光整理所，我們把這件事叫做——建築師先畫出承重牆，再談室內設計。\n\n建構的起點：能量是結構，不是奢侈品。',
+    tips: [
+      {
+        title: '今天：給自己一段完整的「不被任何事打擾」的時間',
+        description:
+          '不用做什麼，不用有產出。就是讓自己靜一靜。這二十分鐘，會決定接下來好幾個小時的品質。',
+        timeframe: '今天',
+      },
+      {
+        title: '這週：檢視三樣每天接觸的東西，它們有在補充你，還是在消耗你？',
+        description:
+          '床單的觸感、用的杯子、打開的第一個 APP。這些小事累積起來，決定了你每天的底色。',
+        timeframe: '這週',
+      },
+      {
+        title: '這個月：為「恢復」這件事，設計一個可以重複的儀式',
+        description:
+          '不是偶爾的犒賞，是固定的補充。就像建築需要維護，你的能量結構也需要定期整理。',
+        timeframe: '這個月',
+      },
+    ],
+    sharingPrompt:
+      '接下來三天，留意你在說「好」之前，身體有沒有先緊了一下。\n\n那個緊，是你的能量在說話。\n\n當你開始聽見它，你就知道——這不是測驗。這是你。',
+    shareText: '我是能量建築師，你是哪一型？',
+    nextSteps:
+      '關係的品質，從你喝的水開始。\n\n這不是比喻。當你不需要擔心最基本的那一口，你才有餘裕去建造更重要的東西。如果你想知道接下來 14 天怎麼走，我在 LINE 這裡。',
+    nextStepsCTA: '開始理順關係 →',
+    lineOAUrl: LINE_OA_URL,
+  },
+
+  explorer: {
+    title: '此刻的你，是一位生命航行引水人',
+    subtitle: '迷路，在你這裡從來不是終點。那只是地圖還沒畫到的地方。',
+    introduction:
+      '迷路也是一種抵達，願意就有一口純淨的水陪你走。\n\n你可能會：\n對「也許可以不一樣」這句話特別有感\n喜歡先試試看，看看會發生什麼\n不怕繞路，但很怕停滯\n對別人分享的經驗充滿好奇\n\n你的生命，是一場持續進行中的溫柔實驗。',
+    selfAwareness:
+      '你真正害怕的不是走錯路，是停在原地。\n\n那些試試看的小決定，每一個都是你的座標點。即使後來改變了方向，那些點也不會消失——它們變成了你的地圖。\n\n在時光整理所，我們相信：每次繞路，都是在收集只有你才有的生命素材。\n\n航行的起點：先出發，地圖在路上慢慢長出來。',
+    tips: [
+      {
+        title: '今天：做一件你猶豫很久的小嘗試',
+        description:
+          '不需要是大改變。換一條回家的路、點一道沒吃過的菜、傳一則一直沒傳出去的訊息。讓今天有一個新的座標點。',
+        timeframe: '今天',
+      },
+      {
+        title: '這週：寫下你觀察到的一個「也許可以不一樣」',
+        description:
+          '不需要馬上行動，只是把它寫下來。讓那個直覺有地方落腳，它之後會告訴你怎麼走。',
+        timeframe: '這週',
+      },
+      {
+        title: '這個月：把你試過的某個改變，整理成一個可以分享的小故事',
+        description:
+          '你的繞路經驗，對還在猶豫要不要出發的人，可能就是最好的引水。',
+        timeframe: '這個月',
+      },
+    ],
+    sharingPrompt:
+      '接下來三天，留意你在選擇的瞬間，那個「也許試試看」的聲音是怎麼說話的。\n\n那個聲音就是你的羅盤。\n\n當你開始聽懂它，你就知道——這不是測驗。這是你。',
+    shareText: '我是生命航行引水人，你是哪一型？',
+    nextSteps:
+      '呼吸的品質，決定你能走多遠。\n\n你不怕試，但你需要一個乾淨的出發點。當家裡的空氣被理順了，接下來每一步都會更輕。如果你準備好了，我在 LINE 這裡。',
+    nextStepsCTA: '開始理順世界 →',
+    lineOAUrl: LINE_OA_URL,
+  },
+
+  builder: {
+    title: '此刻的你，是一位秩序累積者',
+    subtitle: '你從不只看現在。你的眼睛天生長在三年後的位置。',
+    introduction:
+      '每一個緩慢但篤定的選擇，都在為你的未來預留空間。\n\n你可能會：\n思考一件事之前，會先想它能不能長期\n對流程清楚的結構有天然的信任感\n喜歡把複雜的事情拆解成可以重複執行的步驟\n對「一次把它做對」這件事有某種堅持\n\n你的生命，是一場刻意設計的長期佈局。',
+    selfAwareness:
+      '你真正想要的不是快，是穩。\n\n那些看起來很慢的選擇，其實是在為未來鋪路。每一個你建立的小系統，都在幫你省下未來要花的力氣。\n\n在時光整理所，我們把這個能力叫做——讓時間替你工作。\n\n累積的起點：先把結構建好，複利自然會發生。',
+    tips: [
+      {
+        title: '今天：把一件重複在做的事情寫成一個小流程',
+        description:
+          '不用複雜，三到五個步驟就好。你把它寫出來的那一刻，它就從「一直要做的事」變成了「一個可以交給系統的事」。',
+        timeframe: '今天',
+      },
+      {
+        title: '這週：檢視你的支出裡，哪些是消耗，哪些其實是在累積',
+        description:
+          '有些看起來是花費的事，背後其實是在建造。清楚區分這兩種，是長期佈局的第一步。',
+        timeframe: '這週',
+      },
+      {
+        title: '這個月：設計一件可以讓時間幫你工作的小事',
+        description:
+          '不需要從大的開始。一個每週固定的回顧習慣、一個自動化的小流程，十年後你會感謝今天做了這個選擇。',
+        timeframe: '這個月',
+      },
+    ],
+    sharingPrompt:
+      '接下來三天，留意你在做一個小決定的時候，那個「這能不能長期」的聲音是什麼時候出現的。\n\n那個聲音，就是你的秩序感在說話。\n\n當你開始認出它，你就知道——這不是測驗。這是你。',
+    shareText: '我是秩序累積者，你是哪一型？',
+    nextSteps:
+      '你早就知道：每個月的錢，流向哪裡，決定了你在哪裡。\n\n理順未來不是多花一筆錢，是讓原本就會花的錢走對方向。系統早就在這裡，見證在累積，平台在等你。如果你想了解接下來 14 天的第一步，我在 LINE 這裡。',
+    nextStepsCTA: '開始理順未來 →',
+    lineOAUrl: LINE_OA_URL,
+  },
+};
