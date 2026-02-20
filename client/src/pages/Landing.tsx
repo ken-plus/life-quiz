@@ -14,24 +14,24 @@ export default function Landing() {
 
   const lifeTypes = [
     {
-      name: '家庭防線型',
-      description: '優先安心，守護家人',
-      icon: '🛡️',
+      name: '時光整理師',
+      description: '把散落的碎片，放回位置',
+      icon: '🕰️',
     },
     {
-      name: '邊界能量型',
-      description: '重視狀態，保護自己',
-      icon: '⚡',
-    },
-    {
-      name: '可能性試驗型',
-      description: '開放心態，願意嘗試',
-      icon: '🌱',
-    },
-    {
-      name: '系統累積型',
-      description: '長期視角，複利思維',
+      name: '能量建築師',
+      description: '先留出呼吸，再談結構',
       icon: '🏗️',
+    },
+    {
+      name: '生命航行引水人',
+      description: '迷路也是一種抵達',
+      icon: '🧭',
+    },
+    {
+      name: '秩序累積者',
+      description: '緩慢但篤定，為未來鋪路',
+      icon: '📐',
     },
   ];
 
@@ -53,15 +53,15 @@ export default function Landing() {
         <div className="container relative z-10">
           <div className="max-w-2xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
-              你的生活，其實有一套
+              這不是測驗你的能力，
               <br />
-              默默運作的邏輯
+              而是一場把混亂整理成秩序的實驗
             </h1>
 
             <p className="text-lg sm:text-xl text-white/90 mb-8 leading-relaxed">
-              這不是考試，也沒有標準答案。
+              給自己七分鐘。
               <br />
-              只是當世界很吵的時候，你最自然守護的是什麼？
+              讓那些散落的時間碎片，慢慢浮出水面。
             </p>
 
             <Button
@@ -69,7 +69,7 @@ export default function Landing() {
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-lg px-8 py-6"
             >
-              開始看看我的生活邏輯 <ArrowRight className="w-5 h-5" />
+              開始整理 <ArrowRight className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -82,15 +82,15 @@ export default function Landing() {
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">
               我們把生活中那些真實的小瞬間，
               <br />
-              整理成 34 個日常選擇
+              整理成 21 個日常選擇
             </h2>
 
             <div className="space-y-4 text-foreground/80 leading-relaxed">
-              <p>沒有對錯，也沒有標準答案。</p>
+              <p>沒有標準答案，也不評判對錯。</p>
               <p className="font-medium">
-                只有屬於現在的生活節奏
+                只有屬於此刻的你，
                 <br />
-                和優先順序。
+                最真實的運作方式。
               </p>
             </div>
           </div>
@@ -99,10 +99,10 @@ export default function Landing() {
           <Card className="p-6 sm:p-8 bg-card border-border">
             <div className="space-y-4 text-center">
               <p className="text-lg font-medium text-foreground">
-                填寫時間：約 4-6 分鐘
+                填寫時間：約 5-7 分鐘
               </p>
               <p className="text-foreground/70">
-                建議：用直覺作答，不用想太久。
+                用直覺作答，不用想太久。第一個浮現的感受，往往最準。
               </p>
             </div>
           </Card>
@@ -114,7 +114,7 @@ export default function Landing() {
         <div className="container">
           <div className="max-w-3xl mx-auto mb-12">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground text-center mb-4">
-              完成後，你會知道自己比較接近哪一型：
+              完成後，你會看見此刻的自己，比較接近哪一型：
             </h2>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6 mt-8">
@@ -133,12 +133,12 @@ export default function Landing() {
           {/* Discovery Message */}
           <Card className="p-6 sm:p-8 bg-card border-border">
             <p className="text-center text-foreground leading-relaxed">
-              你可能會發現
+              你可能會發現，
               <br />
               <span className="font-medium">
-                原來你不是想太多，
+                原來那些你以為是缺點的地方，
                 <br />
-                你只是看事情的角度不同。
+                只是還沒被好好整理過的秩序。
               </span>
             </p>
           </Card>
@@ -153,7 +153,7 @@ export default function Landing() {
             size="lg"
             className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-lg px-8 py-6"
           >
-            開始看看我的生活邏輯 <ArrowRight className="w-5 h-5" />
+            開始整理 <ArrowRight className="w-5 h-5" />
           </Button>
         </div>
       </div>
@@ -162,11 +162,11 @@ export default function Landing() {
       <div className="border-t border-border bg-background/50 py-8">
         <div className="container text-center text-sm text-muted-foreground">
           <p>
-            這份問卷僅用於自我探索。
+            這份問卷沒有標籤，也沒有評價。
             <br />
-            沒有標籤，沒有評價。
+            只有此刻最真實的你，
             <br />
-            只有更理解自己。
+            和一個讓混亂開始有秩序的起點。
           </p>
         </div>
       </div>
