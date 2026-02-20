@@ -14,10 +14,10 @@ import { useLocation } from 'wouter';
 import { Share2, ArrowLeft, ChevronRight, ChevronLeft, Copy, Check } from 'lucide-react';
 
 const resultImages: Record<string, string> = {
-  guardian: '/lifecode-result-guardian.PNG',
-  balancer: '/lifecode-result-balancer.PNG',
-  explorer: '/lifecode-result-explorer.PNG',
-  builder: '/lifecode-result-Builder.jpg',
+  guardian: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/TxuoMhDJoinJriHT.png',
+  balancer: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/xVMFxelvLByPoDQF.png',
+  explorer: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/gWtddQHmLXBrIAVS.png',
+  builder: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663308784142/OnEDXHYGpnMVDoVS.jpeg',
 };
 
 export default function Result() {
@@ -191,19 +191,100 @@ export default function Result() {
                 </div>
               </div>
 
-              {/* Sharing Section - Improved Card Design */}
+              {/* Sharing Section */}
               <div className="mb-12">
                 <h2 className="text-2xl font-semibold text-foreground mb-6">分享你的發現</h2>
                 <Card className="p-8 border-border bg-card">
                   <p className="text-foreground leading-relaxed mb-8 whitespace-pre-line">
                     {content.sharingPrompt.replace(/試試看/g, '陪你探索')}
                   </p>
-                  
-                  {/* Share Card Preview */}
-                  <div className="mb-8 p-6 rounded-lg bg-background border-2 border-dashed border-border">
-                    <p className="text-center text-foreground font-semibold mb-4">{content.shareText}</p>
-                    <p className="text-center text-sm text-muted-foreground">陪你探索你的生活密碼</p>
+
+                  {/* Visual Share Card */}
+                  <div
+                    className="mb-8 rounded-2xl overflow-hidden relative"
+                    style={{ aspectRatio: '1/1', background: type.color + '22' }}
+                  >
+                    {/* Background blobs */}
+                    <div style={{
+                      position: 'absolute', top: '-20%', left: '-10%',
+                      width: '60%', height: '60%', borderRadius: '50%',
+                      background: type.color, opacity: 0.2, filter: 'blur(40px)',
+                    }} />
+                    <div style={{
+                      position: 'absolute', bottom: '-20%', right: '-10%',
+                      width: '55%', height: '55%', borderRadius: '50%',
+                      background: type.accentColor, opacity: 0.18, filter: 'blur(40px)',
+                    }} />
+
+                    {/* Card content */}
+                    <div style={{
+                      position: 'absolute', inset: 0, padding: '10%',
+                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    }}>
+                      {/* Top */}
+                      <div>
+                        <div style={{
+                          fontSize: '0.65rem', letterSpacing: '0.2em',
+                          color: type.accentColor, marginBottom: '6px', opacity: 0.8,
+                          fontFamily: 'Noto Serif TC, serif',
+                        }}>
+                          時光整理所 · SHÍGUĀNG ZHĚNGLǏ SuǑ
+                        </div>
+                        <div style={{
+                          width: '32px', height: '1.5px',
+                          background: type.accent, opacity: 0.5,
+                          backgroundColor: type.accentColor,
+                        }} />
+                      </div>
+
+                      {/* Center */}
+                      <div>
+                        <div style={{
+                          fontSize: 'clamp(1.1rem, 4vw, 1.6rem)',
+                          fontWeight: 500, lineHeight: 1.6,
+                          color: 'var(--foreground)',
+                          fontFamily: 'Noto Serif TC, serif',
+                        }}>
+                          {content.shareText.replace('，你現在是哪一型？', '').replace('，你是哪一型？', '').replace('，你是哪一型？', '')}
+                        </div>
+                        <div style={{
+                          marginTop: '12px',
+                          fontSize: '0.8rem',
+                          color: type.color,
+                          fontFamily: 'Noto Serif TC, serif',
+                          letterSpacing: '0.08em',
+                        }}>
+                          {type.roleTitle}
+                        </div>
+                      </div>
+
+                      {/* Bottom: QR */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <div style={{
+                          fontSize: '0.65rem', color: 'var(--muted-foreground)',
+                          letterSpacing: '0.1em',
+                        }}>
+                          掃碼，找到你的型態
+                        </div>
+                        <div style={{
+                          padding: '6px', borderRadius: '8px',
+                          background: 'rgba(255,255,255,0.7)',
+                          border: `1px solid ${type.color}44`,
+                        }}>
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=72x72&color=${type.accentColor.replace('#','')}&bgcolor=ffffff&data=${encodeURIComponent('https://quiz.kenplus.tw')}`}
+                            width={56} height={56}
+                            alt="QR"
+                            style={{ display: 'block' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
+                  <p className="text-xs text-center text-muted-foreground mb-6">
+                    截圖這張卡片，發到 IG / LINE / 朋友圈，讓他們也來找自己的型態
+                  </p>
 
                   {/* Action Buttons */}
                   <div className="space-y-3">
