@@ -392,7 +392,9 @@ export default function ShareCards() {
         maxWidth: 420,
       }}>
         <p style={{ fontSize: 12, color: "#8B7355", letterSpacing: "0.08em", margin: 0, lineHeight: 1.8 }}>
-          長按圖卡儲存（手機桌布）或右鍵另存（電腦）
+          手機截圖或電腦截圖，都可以分享給朋友。<br />
+          圖卡裡的 QR code 是通用的，會帶朋友到問卷首頁。<br />
+          也歡迎直接分享問卷連結，讓朋友自己選一張卡！<br />
         </p>
       </div>
 

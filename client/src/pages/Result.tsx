@@ -388,7 +388,7 @@ export default function Result() {
                       );
                     })()}
                   </div>
-                  <p className="text-center text-sm text-muted-foreground mb-8">長按圖卡儲存（手機）· 右鍵另存（電腦）</p>
+                  <p className="text-center text-sm text-muted-foreground mb-8">手機截圖或電腦截圖，都可以分享給朋友</p>
 
                   <div className="space-y-3">
                     <Button
