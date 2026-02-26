@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // 🔧 換成你的問卷網址
 const QUIZ_URL = "https://quiz.kenplus.tw";
-const QR_URL = (url) =>
+const QR_URL = (url: string) =>
   `https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=8B7355&bgcolor=F5F0E8&data=${encodeURIComponent(url)}`;
 
 const cards = [
@@ -14,11 +14,11 @@ const cards = [
     textColor: "#3D3228",
     subColor: "#8B7355",
     tag: "時光整理所",
-    tagEn: "SHÍGUĀNG ZHĚNGLǏ SuǑ",
-    headline: "這不是測驗你的能力，",
-    headline2: "而是一場把混亂",
-    headline3: "整理成秩序的實驗。",
-    sub: "給自己七分鐘。掃碼開始。",
+    tagEn: "Gravity of Heart System",
+    headline: "這不是能力測驗，",
+    headline2: "每一次生活中的亂流",
+    headline3: "都是過去現在未來的地基。",
+    sub: "給自己三-五分鐘。掃碼開始。",
     orb1: "#C9B8A0",
     orb2: "#8BA888",
     shape: "circle",
@@ -33,7 +33,7 @@ const cards = [
     tag: "時光整理師",
     tagEn: "THE ORGANIZER",
     headline: "你不是想太多。",
-    headline2: "你只是比別人更早感知到，",
+    headline2: "只是比世界更早感知到，",
     headline3: "什麼東西快要散了。",
     sub: "掃碼，找到屬於你的整理起點。",
     orb1: "#C9A876",
@@ -83,9 +83,9 @@ const cards = [
     subColor: "#6B7D54",
     tag: "秩序累積者",
     tagEn: "THE BUILDER",
-    headline: "你的眼睛，",
-    headline2: "天生長在",
-    headline3: "三年後的位置。",
+    headline: "你的視界，",
+    headline2: "總能預見",
+    headline3: "三年後的世界。",
     sub: "掃碼，開始為未來佈局。",
     orb1: "#8B9D6F",
     orb2: "#B0C090",
@@ -93,7 +93,9 @@ const cards = [
   },
 ];
 
-function CardBackground({ card }) {
+export { cards };
+
+function CardBackground({ card }: { card: any }) {
   const { bg, orb1, orb2, shape } = card;
   return (
     <svg
@@ -171,7 +173,7 @@ function CardBackground({ card }) {
   );
 }
 
-function Card({ card, size = 540 }) {
+export function Card({ card, size = 540 }: { card: any; size?: number }) {
   const scale = size / 540;
   return (
     <div
@@ -231,12 +233,12 @@ function Card({ card, size = 540 }) {
         {/* Center: headline */}
         <div style={{
           flex: 1, display: "flex", alignItems: "center",
-          padding: `${20 * scale}px 0`,
+          padding: `${14 * scale}px 0`,
         }}>
           <div>
             <div style={{
               fontFamily: "'Noto Serif TC', serif",
-              fontSize: `${38 * scale}px`,
+              fontSize: `${22 * scale}px`,
               lineHeight: 1.5,
               color: card.textColor,
               fontWeight: 500,
@@ -301,7 +303,7 @@ function Card({ card, size = 540 }) {
               letterSpacing: "0.1em",
               opacity: 0.6,
             }}>
-              掃碼開始整理
+              掃碼開始時光之旅
             </div>
           </div>
         </div>
@@ -312,6 +314,15 @@ function Card({ card, size = 540 }) {
 
 export default function ShareCards() {
   const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const typeParam = params.get("type");
+    if (typeParam) {
+      const idx = cards.findIndex((c) => c.id === typeParam);
+      if (idx !== -1) setActive(idx);
+    }
+  }, []);
 
   return (
     <div style={{
@@ -326,13 +337,13 @@ export default function ShareCards() {
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div style={{ fontSize: 13, letterSpacing: "0.2em", color: "#A89070", marginBottom: 8 }}>
-          SHÍGUĀNG ZHĚNGLǏ SuǑ
+          Gravity of Heart System
         </div>
         <h1 style={{ fontSize: 22, fontWeight: 600, color: "#3D3228", letterSpacing: "0.08em", margin: 0 }}>
           時光整理所 · 分享圖卡
         </h1>
         <p style={{ fontSize: 12, color: "#8B7355", marginTop: 8, letterSpacing: "0.1em" }}>
-          截圖即可使用 · 1:1 正方形 · 適合分享與桌布
+          我們設計的能量卡 · 來自過去現在未來 · 還有分享之後同頻的那個人。
         </p>
       </div>
 
@@ -381,8 +392,7 @@ export default function ShareCards() {
         maxWidth: 420,
       }}>
         <p style={{ fontSize: 12, color: "#8B7355", letterSpacing: "0.08em", margin: 0, lineHeight: 1.8 }}>
-          長按圖卡儲存（手機）或右鍵另存（電腦）<br />
-          QR 碼指向問卷入口 · 換網址只需改第 4 行 <code style={{ background: "#D4C8B8", padding: "1px 5px", borderRadius: 4 }}>QUIZ_URL</code>
+          長按圖卡儲存（手機桌布）或右鍵另存（電腦）
         </p>
       </div>
 

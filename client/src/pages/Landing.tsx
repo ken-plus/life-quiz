@@ -1,37 +1,39 @@
 /**
- * 《你的生活密碼》著陸頁面
- * 設計風格：繼承時光整理所的知性溫度 + 微創新
- * 核心特性：神秘感 × 引流鉤子 × 心理安全
+ * 時光整理所 著陸頁面
+ * 設計骨架：原版質感與架構
+ * 內容：v2 新版文案與型態
  */
 
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
+import { LIFE_TYPES } from '@/lib/quizData';
+import { Card as ShareCard, cards as shareCards } from './ShareCards';
 
 export default function Landing() {
   const [, navigate] = useLocation();
 
   const lifeTypes = [
     {
-      name: '家庭防線型',
-      description: '優先安心，守護家人',
-      icon: '🛡️',
+      name: LIFE_TYPES.guardian.displayName,
+      description: LIFE_TYPES.guardian.roleTitle,
+      icon: '🕰️',
     },
     {
-      name: '邊界能量型',
-      description: '重視狀態，保護自己',
-      icon: '⚡',
-    },
-    {
-      name: '可能性試驗型',
-      description: '開放心態，願意嘗試',
-      icon: '🌱',
-    },
-    {
-      name: '系統累積型',
-      description: '長期視角，複利思維',
+      name: LIFE_TYPES.balancer.displayName,
+      description: LIFE_TYPES.balancer.roleTitle,
       icon: '🏗️',
+    },
+    {
+      name: LIFE_TYPES.explorer.displayName,
+      description: LIFE_TYPES.explorer.roleTitle,
+      icon: '⚓',
+    },
+    {
+      name: LIFE_TYPES.builder.displayName,
+      description: LIFE_TYPES.builder.roleTitle,
+      icon: '🧱',
     },
   ];
 
@@ -55,13 +57,13 @@ export default function Landing() {
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
               你的生活，其實有一套
               <br />
-              默默運作的邏輯
+              默默運作的邏輯與節奏
             </h1>
 
             <p className="text-lg sm:text-xl text-white/90 mb-8 leading-relaxed">
-              這不是考試，也沒有標準答案。
+              這不是考試，沒有標準答案。
               <br />
-              只是當世界很吵的時候，你最自然守護的是什麼？
+              只是當邏輯與感受對話時，你想著什麼？
             </p>
 
             <Button
@@ -69,7 +71,7 @@ export default function Landing() {
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-lg px-8 py-6"
             >
-              開始看看我的生活邏輯 <ArrowRight className="w-5 h-5" />
+              開始一場實驗 <ArrowRight className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -80,18 +82,25 @@ export default function Landing() {
         <div className="max-w-2xl mx-auto mb-16">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">
-              我們把生活中那些真實的小瞬間，
+              我們把生活中那些日常的小瞬間，
               <br />
-              整理成 34 個日常選擇
+              整理成 21 個生活選擇
             </h2>
 
             <div className="space-y-4 text-foreground/80 leading-relaxed">
-              <p>沒有對錯，也沒有標準答案。</p>
+              <p>沒有對錯，沒有標準答案。</p>
               <p className="font-medium">
-                只有屬於現在的生活節奏
+                只有當下這一刻屬於你的感受
                 <br />
-                和優先順序。
+                你的邏輯還有你的生活節奏。
               </p>
+            </div>
+          </div>
+
+          {/* 入口總卡 */}
+          <div className="flex justify-center mb-12">
+            <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 40px rgba(100,80,60,0.12)', width: '100%', maxWidth: 400 }}>
+              <ShareCard card={shareCards.find(c => c.id === 'entry')!} size={400} />
             </div>
           </div>
 
@@ -99,10 +108,10 @@ export default function Landing() {
           <Card className="p-6 sm:p-8 bg-card border-border">
             <div className="space-y-4 text-center">
               <p className="text-lg font-medium text-foreground">
-                填寫時間：約 4-6 分鐘
+                填寫時間：約 3–5 分鐘
               </p>
               <p className="text-foreground/70">
-                建議：用直覺作答，不用想太久。
+                跟隨直覺的指南針，不用想太久。
               </p>
             </div>
           </Card>
@@ -114,7 +123,7 @@ export default function Landing() {
         <div className="container">
           <div className="max-w-3xl mx-auto mb-12">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground text-center mb-4">
-              完成後，你會知道自己比較接近哪一型：
+              完成後，你會知道貼近現在的是哪一型：
             </h2>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6 mt-8">
@@ -131,14 +140,14 @@ export default function Landing() {
           </div>
 
           {/* Discovery Message */}
-          <Card className="p-6 sm:p-8 bg-card border-border">
+          <Card className="p-6 sm:p-8 bg-card border-border max-w-3xl mx-auto">
             <p className="text-center text-foreground leading-relaxed">
               你可能會發現
               <br />
               <span className="font-medium">
                 原來你不是想太多，
                 <br />
-                你只是看事情的角度不同。
+                只是每個當下的你感受不同。
               </span>
             </p>
           </Card>
@@ -153,7 +162,7 @@ export default function Landing() {
             size="lg"
             className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-lg px-8 py-6"
           >
-            開始看看我的生活邏輯 <ArrowRight className="w-5 h-5" />
+            開始一段時光之旅 <ArrowRight className="w-5 h-5" />
           </Button>
         </div>
       </div>
@@ -166,7 +175,7 @@ export default function Landing() {
             <br />
             沒有標籤，沒有評價。
             <br />
-            只有更理解自己。
+            只有現在的自己跟自己。
           </p>
         </div>
       </div>
