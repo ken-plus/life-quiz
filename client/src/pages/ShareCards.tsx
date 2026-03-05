@@ -1,427 +1,255 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from 'react';
+import { Share2, Copy, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
-// 🔧 換成你的問卷網址
-const QUIZ_URL = "https://quiz.kenplus.tw";
-const QR_URL = (url: string) =>
-  `https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=8B7355&bgcolor=F5F0E8&data=${encodeURIComponent(url)}`;
-
-const cards = [
-  {
-    id: "entry",
-    label: "入口總卡",
-    bg: "#F0EBE1",
-    accent: "#A89070",
-    textColor: "#3D3228",
-    subColor: "#8B7355",
-    tag: "時光整理所",
-    tagEn: "Gravity of Heart System",
-    headline: "這不是能力測驗，",
-    headline2: "每一次生活中的亂流",
-    headline3: "都是過去現在未來的地基。",
-    sub: "給自己三-五分鐘。掃碼開始。",
-    orb1: "#C9B8A0",
-    orb2: "#8BA888",
-    shape: "circle",
-  },
-  {
-    id: "guardian",
-    label: "時光整理師",
-    bg: "#EDE6DC",
-    accent: "#A0826D",
-    textColor: "#3D2E26",
-    subColor: "#A0826D",
-    tag: "時光整理師",
-    tagEn: "THE ORGANIZER",
-    headline: "你不是想太多。",
-    headline2: "只是比世界更早感知到，",
-    headline3: "什麼東西快要散了。",
-    sub: "掃碼，找到屬於你的整理起點。",
-    orb1: "#C9A876",
-    orb2: "#D4B896",
-    shape: "sweep",
-  },
-  {
-    id: "balancer",
-    label: "能量建築師",
-    bg: "#E8EEEB",
-    accent: "#5F8B84",
-    textColor: "#253430",
-    subColor: "#5F8B84",
-    tag: "能量建築師",
-    tagEn: "THE ARCHITECT",
-    headline: "先清出呼吸的空間，",
-    headline2: "才能談",
-    headline3: "接下來的結構。",
-    sub: "掃碼，看見你的能量藍圖。",
-    orb1: "#7BA89F",
-    orb2: "#A8C4BF",
-    shape: "wave",
-  },
-  {
-    id: "explorer",
-    label: "生命航行引水人",
-    bg: "#EDE8DF",
-    accent: "#B88A5C",
-    textColor: "#352B1E",
-    subColor: "#B88A5C",
-    tag: "生命航行引水人",
-    tagEn: "THE NAVIGATOR",
-    headline: "迷路，",
-    headline2: "也是一種",
-    headline3: "抵達。",
-    sub: "掃碼，找到你的下一個座標。",
-    orb1: "#D4A574",
-    orb2: "#E8C89A",
-    shape: "arch",
-  },
-  {
-    id: "builder",
-    label: "秩序累積者",
-    bg: "#E9EDE4",
-    accent: "#6B7D54",
-    textColor: "#2A3020",
-    subColor: "#6B7D54",
-    tag: "秩序累積者",
-    tagEn: "THE BUILDER",
-    headline: "你的視界，",
-    headline2: "總能預見",
-    headline3: "三年後的世界。",
-    sub: "掃碼，開始為未來佈局。",
-    orb1: "#8B9D6F",
-    orb2: "#B0C090",
-    shape: "grid",
-  },
-];
-
-export { cards };
-
-function CardBackground({ card }: { card: any }) {
-  const { bg, orb1, orb2, shape } = card;
-  return (
-    <svg
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-      viewBox="0 0 540 540"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <radialGradient id={`g1-${card.id}`} cx="30%" cy="25%" r="55%">
-          <stop offset="0%" stopColor={orb1} stopOpacity="0.35" />
-          <stop offset="100%" stopColor={bg} stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id={`g2-${card.id}`} cx="75%" cy="80%" r="50%">
-          <stop offset="0%" stopColor={orb2} stopOpacity="0.28" />
-          <stop offset="100%" stopColor={bg} stopOpacity="0" />
-        </radialGradient>
-        <filter id={`noise-${card.id}`}>
-          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" />
-          <feColorMatrix type="saturate" values="0" />
-          <feBlend in="SourceGraphic" mode="multiply" result="blend" />
-          <feComposite in="blend" in2="SourceGraphic" operator="in" />
-        </filter>
-      </defs>
-      <rect width="540" height="540" fill={bg} />
-      <rect width="540" height="540" fill={`url(#g1-${card.id})`} />
-      <rect width="540" height="540" fill={`url(#g2-${card.id})`} />
-
-      {shape === "circle" && (
-        <>
-          <circle cx="270" cy="270" r="200" fill="none" stroke={orb1} strokeWidth="0.5" opacity="0.4" />
-          <circle cx="270" cy="270" r="150" fill="none" stroke={orb1} strokeWidth="0.3" opacity="0.25" />
-          <ellipse cx="430" cy="110" rx="120" ry="120" fill={orb2} opacity="0.12" />
-          <ellipse cx="110" cy="430" rx="100" ry="100" fill={orb1} opacity="0.1" />
-        </>
-      )}
-      {shape === "sweep" && (
-        <>
-          <path d="M0 180 Q 180 80 540 220" fill="none" stroke={orb1} strokeWidth="0.6" opacity="0.35" />
-          <path d="M0 220 Q 200 110 540 260" fill="none" stroke={orb1} strokeWidth="0.3" opacity="0.2" />
-          <ellipse cx="450" cy="100" rx="140" ry="140" fill={orb1} opacity="0.11" />
-          <ellipse cx="90" cy="450" rx="90" ry="90" fill={orb2} opacity="0.09" />
-        </>
-      )}
-      {shape === "wave" && (
-        <>
-          <path d="M-50 320 Q 130 240 270 290 Q 410 340 590 260" fill="none" stroke={orb1} strokeWidth="0.7" opacity="0.4" />
-          <path d="M-50 360 Q 150 280 290 330 Q 430 380 610 300" fill="none" stroke={orb1} strokeWidth="0.35" opacity="0.22" />
-          <ellipse cx="480" cy="80" rx="130" ry="130" fill={orb2} opacity="0.13" />
-        </>
-      )}
-      {shape === "arch" && (
-        <>
-          <path d="M 100 540 Q 270 200 440 540" fill="none" stroke={orb1} strokeWidth="0.6" opacity="0.35" />
-          <path d="M 140 540 Q 270 250 400 540" fill="none" stroke={orb1} strokeWidth="0.3" opacity="0.2" />
-          <ellipse cx="270" cy="100" rx="160" ry="80" fill={orb2} opacity="0.13" />
-        </>
-      )}
-      {shape === "grid" && (
-        <>
-          {[120, 240, 360, 480].map((x) => (
-            <line key={x} x1={x} y1="0" x2={x} y2="540" stroke={orb1} strokeWidth="0.4" opacity="0.18" />
-          ))}
-          {[120, 240, 360, 480].map((y) => (
-            <line key={y} x1="0" y1={y} x2="540" y2={y} stroke={orb1} strokeWidth="0.4" opacity="0.18" />
-          ))}
-          <ellipse cx="420" cy="120" rx="120" ry="120" fill={orb1} opacity="0.1" />
-          <ellipse cx="120" cy="430" rx="90" ry="90" fill={orb2} opacity="0.09" />
-        </>
-      )}
-
-      {/* grain overlay */}
-      <rect width="540" height="540" fill="transparent"
-        style={{ filter: `url(#noise-${card.id})`, opacity: 0.04 }} />
-    </svg>
-  );
-}
-
-export function Card({ card, size = 540 }: { card: any; size?: number }) {
-  const scale = size / 540;
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: size * 0.025,
-        fontFamily: "'Noto Serif TC', 'Noto Serif SC', Georgia, serif",
-        flexShrink: 0,
-      }}
-    >
-      <CardBackground card={card} />
-
-      {/* Content layer */}
-      <div style={{
-        position: "absolute", inset: 0,
-        padding: `${44 * scale}px`,
-        display: "flex", flexDirection: "column",
-        justifyContent: "space-between",
-      }}>
-        {/* Top: brand */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{
-              fontFamily: "'Noto Serif TC', serif",
-              fontSize: `${13 * scale}px`,
-              letterSpacing: "0.18em",
-              color: card.subColor,
-              opacity: 0.85,
-              marginBottom: `${4 * scale}px`,
-            }}>
-              {card.tagEn}
-            </div>
-            <div style={{
-              fontFamily: "'Noto Serif TC', serif",
-              fontSize: `${22 * scale}px`,
-              letterSpacing: "0.08em",
-              color: card.textColor,
-              fontWeight: 600,
-            }}>
-              {card.tag}
-            </div>
-          </div>
-
-          {/* Decorative line */}
-          <div style={{
-            width: `${40 * scale}px`,
-            height: `${1.5 * scale}px`,
-            background: card.accent,
-            opacity: 0.5,
-            marginTop: `${18 * scale}px`,
-          }} />
-        </div>
-
-        {/* Center: headline */}
-        <div style={{
-          flex: 1, display: "flex", alignItems: "center",
-          padding: `${14 * scale}px 0`,
-        }}>
-          <div>
-            <div style={{
-              fontFamily: "'Noto Serif TC', serif",
-              fontSize: `${22 * scale}px`,
-              lineHeight: 1.5,
-              color: card.textColor,
-              fontWeight: 500,
-              letterSpacing: "0.05em",
-            }}>
-              {card.headline}
-              <br />
-              {card.headline2}
-              <br />
-              {card.headline3}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom: QR + sub */}
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-        }}>
-          <div>
-            <div style={{
-              fontFamily: "'Noto Serif TC', serif",
-              fontSize: `${13 * scale}px`,
-              color: card.subColor,
-              letterSpacing: "0.12em",
-              marginBottom: `${8 * scale}px`,
-              opacity: 0.8,
-            }}>
-              {card.sub}
-            </div>
-            <div style={{
-              width: `${40 * scale}px`,
-              height: `${1 * scale}px`,
-              background: card.accent,
-              opacity: 0.4,
-            }} />
-          </div>
-
-          {/* QR code block */}
-          <div style={{
-            display: "flex", flexDirection: "column", alignItems: "center",
-            gap: `${5 * scale}px`,
-          }}>
-            <div style={{
-              padding: `${6 * scale}px`,
-              background: card.bg,
-              borderRadius: `${6 * scale}px`,
-              border: `1px solid ${card.accent}33`,
-            }}>
-              <img
-                src={QR_URL(QUIZ_URL)}
-                width={80 * scale}
-                height={80 * scale}
-                alt="QR Code"
-                style={{ display: "block", imageRendering: "pixelated" }}
-              />
-            </div>
-            <div style={{
-              fontSize: `${9 * scale}px`,
-              color: card.subColor,
-              letterSpacing: "0.1em",
-              opacity: 0.6,
-            }}>
-              掃碼開始時光之旅
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+// 定義問卷結果的資料結構
+interface QuizResult {
+  primaryType: string;
+  scores: Record<string, number>;
 }
 
 export default function ShareCards() {
-  const [active, setActive] = useState(0);
+  const printRef = useRef<HTMLDivElement>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const [isHtml2CanvasLoaded, setIsHtml2CanvasLoaded] = useState(false);
 
+  // 動態加載 html2canvas 腳本 (避免編譯器依賴錯誤)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const typeParam = params.get("type");
-    if (typeParam) {
-      const idx = cards.findIndex((c) => c.id === typeParam);
-      if (idx !== -1) setActive(idx);
+    if ((window as any).html2canvas) {
+      setIsHtml2CanvasLoaded(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.async = true;
+    script.onload = () => setIsHtml2CanvasLoaded(true);
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
+  // 1. 取得使用者的問卷結果 (從 localStorage 或全局狀態取得)
+  useEffect(() => {
+    // 這裡替換為您專案實際儲存結果的方式
+    const storedResult = localStorage.getItem('life_quiz_results');
+    if (storedResult) {
+      try {
+        setQuizResult(JSON.parse(storedResult));
+      } catch (e) {
+        console.error('無法解析測驗結果', e);
+      }
+    } else {
+      // 若無資料，提供預設假資料確保畫面不崩潰
+      setQuizResult({
+        primaryType: 'Builder', 
+        scores: { Builder: 85, Explorer: 60, Balancer: 70, Guardian: 45 }
+      });
     }
   }, []);
 
+  // 2. 自動產生圖片邏輯
+  useEffect(() => {
+    if (!quizResult || !printRef.current || !isHtml2CanvasLoaded) return;
+
+    const generateImage = async () => {
+      try {
+        setIsGenerating(true);
+        // 使用動態加載的 html2canvas 擷取隱藏的 DOM 元素
+        const canvas = await (window as any).html2canvas(printRef.current!, {
+          useCORS: true, // 允許加載外部圖片(如 QR Code)
+          scale: 2, // 提高圖片解析度
+          backgroundColor: '#ffffff',
+          logging: false, // 關閉日誌以提高效能
+        });
+        
+        // 將 Canvas 轉換為 Base64 圖片網址
+        setImageUrl(canvas.toDataURL('image/png'));
+      } catch (error) {
+        console.error('圖片生成失敗:', error);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    // 稍微延遲確保 DOM 完全渲染
+    const timer = setTimeout(() => {
+      generateImage();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [quizResult, isHtml2CanvasLoaded]);
+
+  // 專屬動態文案組合
+  const shareText = `我在這個測驗中發現我的核心型態是【${quizResult?.primaryType || '未知'}】！\n各項能力指數：\n📍 建造者: ${quizResult?.scores['Builder'] || 0}\n📍 探索者: ${quizResult?.scores['Explorer'] || 0}\n📍 平衡者: ${quizResult?.scores['Balancer'] || 0}\n📍 守護者: ${quizResult?.scores['Guardian'] || 0}\n\n👉 快來發掘你的專屬型態：${window.location.origin}`;
+
+  // 3. 雙重保險複製機制
+  const handleCopyText = async () => {
+    try {
+      // 優先嘗試現代 Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareText);
+        setCopyStatus('copied');
+      } else {
+        throw new Error('Clipboard API unavailable');
+      }
+    } catch (err) {
+      // 降級備案：使用傳統的 execCommand
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        setCopyStatus('copied');
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed', fallbackErr);
+        setCopyStatus('error');
+      } finally {
+        textArea.remove();
+      }
+    }
+
+    // 3秒後恢復按鈕狀態
+    setTimeout(() => setCopyStatus('idle'), 3000);
+  };
+
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#F7F3EE",
-      fontFamily: "'Noto Serif TC', Georgia, serif",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      padding: "40px 20px",
-    }}>
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 36 }}>
-        <div style={{ fontSize: 13, letterSpacing: "0.2em", color: "#A89070", marginBottom: 8 }}>
-          Gravity of Heart System
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4">
+      <div className="w-full max-w-md space-y-6">
+        
+        {/* 標題與指引 */}
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">專屬結果分享卡</h1>
+          <p className="text-sm text-gray-500">已為您結合測驗分數與專屬分析</p>
         </div>
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#3D3228", letterSpacing: "0.08em", margin: 0 }}>
-          時光整理所 · 分享圖卡
-        </h1>
-        <p style={{ fontSize: 12, color: "#8B7355", marginTop: 8, letterSpacing: "0.1em" }}>
-          我們設計的能量卡 · 來自過去現在未來 · 還有分享之後同頻的那個人。
-        </p>
-      </div>
 
-      {/* Tab selector */}
-      <div style={{
-        display: "flex", gap: 8, marginBottom: 32, flexWrap: "wrap", justifyContent: "center",
-      }}>
-        {cards.map((c, i) => (
-          <button
-            key={c.id}
-            onClick={() => setActive(i)}
-            style={{
-              padding: "8px 16px",
-              borderRadius: 20,
-              border: `1px solid ${active === i ? c.accent : "#C9B8A0"}`,
-              background: active === i ? c.accent : "transparent",
-              color: active === i ? "#fff" : "#8B7355",
-              fontSize: 12,
-              letterSpacing: "0.1em",
-              cursor: "pointer",
-              fontFamily: "'Noto Serif TC', serif",
-              transition: "all 0.2s",
-            }}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
+        {/* 圖片展示區塊 */}
+        <Card className="overflow-hidden border-2 border-gray-100 shadow-md">
+          <CardContent className="p-0 relative flex justify-center items-center min-h-[300px] bg-gray-100">
+            {isGenerating ? (
+              <div className="flex flex-col items-center text-gray-400 space-y-3">
+                <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                <p className="text-sm">為您生成專屬圖卡中...</p>
+              </div>
+            ) : (
+              imageUrl && (
+                <div className="relative w-full">
+                  <img 
+                    src={imageUrl} 
+                    alt="分享圖卡" 
+                    className="w-full h-auto block"
+                  />
+                  {/* 行動裝置優先的防呆提示：浮動在圖片上方 */}
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none">
+                    <span className="bg-black/70 text-white text-xs px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+                      👇 請長按圖片儲存至手機
+                    </span>
+                  </div>
+                </div>
+              )
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Main card preview */}
-      <div style={{
-        boxShadow: "0 8px 40px rgba(100,80,60,0.12)",
-        borderRadius: 16,
-        overflow: "hidden",
-      }}>
-        <Card card={cards[active]} size={480} />
-      </div>
+        {/* 電腦版輔助提示 (僅在大螢幕顯示) */}
+        {!isGenerating && imageUrl && (
+          <p className="text-center text-xs text-gray-400 hidden sm:block">
+            電腦版用戶請「點擊右鍵」選擇「另存圖片」
+          </p>
+        )}
 
-      {/* Instruction */}
-      <div style={{
-        marginTop: 28,
-        padding: "16px 28px",
-        background: "#EDE8DF",
-        borderRadius: 12,
-        textAlign: "center",
-        maxWidth: 420,
-      }}>
-        <p style={{ fontSize: 12, color: "#8B7355", letterSpacing: "0.08em", margin: 0, lineHeight: 1.8 }}>
-          手機截圖或電腦截圖，都可以分享給朋友。<br />
-          圖卡裡的 QR code 是通用的，會帶朋友到問卷首頁。<br />
-          也歡迎直接分享問卷連結，讓朋友自己選一張卡！<br />
-        </p>
-      </div>
-
-      {/* All 5 mini previews */}
-      <div style={{ marginTop: 40, display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-        {cards.map((c, i) => (
-          <div
-            key={c.id}
-            onClick={() => setActive(i)}
-            style={{
-              cursor: "pointer",
-              opacity: active === i ? 1 : 0.55,
-              transform: active === i ? "scale(1.05)" : "scale(1)",
-              transition: "all 0.2s",
-              boxShadow: active === i ? "0 4px 16px rgba(100,80,60,0.18)" : "none",
-              borderRadius: 6,
-              overflow: "hidden",
-            }}
-          >
-            <Card card={c} size={90} />
+        {/* 文案與按鈕區塊 */}
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm relative">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap font-sans">{shareText}</p>
           </div>
-        ))}
+          
+          <Button 
+            onClick={handleCopyText} 
+            className="w-full py-6 text-lg font-medium tracking-wide transition-all"
+            variant={copyStatus === 'copied' ? 'outline' : 'default'}
+          >
+            {copyStatus === 'idle' && <><Copy className="w-5 h-5 mr-2" /> 複製專屬文案</>}
+            {copyStatus === 'copied' && <><CheckCircle2 className="w-5 h-5 mr-2 text-green-600" /> 已成功複製！快去貼上分享</>}
+            {copyStatus === 'error' && <><AlertCircle className="w-5 h-5 mr-2 text-red-500" /> 複製失敗，請手動選取上方文字</>}
+          </Button>
+        </div>
       </div>
 
-      <p style={{ marginTop: 32, fontSize: 11, color: "#B0A090", letterSpacing: "0.1em" }}>
-        © 時光整理所 · 系統複製系統，見證複製見證
-      </p>
+      {/* ========================================================
+        隱藏的渲染模板 (這是不會顯示在畫面上，專門用來給 html2canvas 拍照的版型)
+        ========================================================
+      */}
+      <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none z-[-1]">
+        <div 
+          ref={printRef} 
+          className="w-[1080px] h-[1080px] bg-[#f8fafc] flex flex-col items-center justify-between p-16 relative overflow-hidden"
+          style={{ fontFamily: '"Noto Sans TC", sans-serif' }}
+        >
+          {/* 背景裝飾 (避免使用導致 html2canvas 崩潰的漸層、濾鏡和混合模式) */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#dbeafe] rounded-full opacity-60" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#f3e8ff] rounded-full opacity-60" />
+
+          {/* 頂部標題 */}
+          <div className="text-center z-10 w-full mt-10">
+            <h2 className="text-4xl font-bold text-gray-500 tracking-widest mb-4">LIFE QUIZ</h2>
+            <h1 className="text-7xl font-extrabold text-slate-800 mb-6 drop-shadow-sm">
+              我的專屬型態：<span className="text-blue-600">{quizResult?.primaryType || '未知'}</span>
+            </h1>
+            <div className="w-32 h-2 bg-blue-600 mx-auto rounded-full" />
+          </div>
+
+          {/* 中央分數雷達 / 列表 */}
+          <div className="w-full max-w-2xl bg-white/95 rounded-3xl p-12 shadow-xl z-10 border border-white">
+            <h3 className="text-3xl font-bold text-center text-slate-700 mb-8 border-b pb-4">能力分佈權重</h3>
+            <div className="grid grid-cols-2 gap-8">
+              {Object.entries(quizResult?.scores || {}).map(([key, value]) => (
+                <div key={key} className="flex flex-col space-y-2">
+                  <div className="flex justify-between items-end">
+                    <span className="text-2xl font-bold text-slate-600">{key}</span>
+                    <span className="text-3xl font-black text-blue-600">{value}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div 
+                      className="bg-blue-500 h-4 rounded-full" 
+                      style={{ width: `${Math.min(100, Number(value))}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 底部行動呼籲與免費公開的 QR Code 產生器 */}
+          <div className="w-full flex justify-between items-end z-10 mb-8 px-8">
+            <div className="flex flex-col">
+              <p className="text-3xl font-bold text-slate-800 mb-2">找到你的無限可能</p>
+              <p className="text-xl text-slate-500">掃描右方 QR Code，開始你的測驗</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin)}&margin=10`}
+                alt="QR Code"
+                className="w-32 h-32"
+                crossOrigin="anonymous" 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
