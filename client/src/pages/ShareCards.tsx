@@ -1,60 +1,58 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Copy, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Copy, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card as UICard, CardContent } from '@/components/ui/card'; // 重新命名以避免與下方匯出的 Card 衝突
+import { Card as UICard, CardContent } from '@/components/ui/card';
+import { useLocation } from 'wouter';
+import { LIFE_TYPES, OperatingStyle, calculateLifeType } from '@/lib/quizData';
 
 // ============================================================================
-// 解決 Landing.tsx 編譯錯誤：恢復原有的 cards 與 Card 匯出供首頁預覽使用
+// 修正：同步 LIFE_TYPES 的定義，確保名稱與圖片路徑一致
 // ============================================================================
 export const cards = [
   {
     id: 'builder',
-    title: '建造者',
-    description: '穩健踏實，打造未來',
-    image: '/lifecode-result-Builder.jpg'
+    title: LIFE_TYPES.builder.displayName,
+    description: LIFE_TYPES.builder.roleTitle,
+    image: '/lifecode-result-builder.jpg'
   },
   {
     id: 'explorer',
-    title: '探索者',
-    description: '勇於冒險，突破界限',
-    image: '/lifecode-result-explorer.PNG'
+    title: LIFE_TYPES.explorer.displayName,
+    description: LIFE_TYPES.explorer.roleTitle,
+    image: '/lifecode-result-explorer.jpg'
   },
   {
     id: 'balancer',
-    title: '平衡者',
-    description: '協調全局，和諧共生',
-    image: '/lifecode-result-balancer.PNG'
+    title: LIFE_TYPES.balancer.displayName,
+    description: LIFE_TYPES.balancer.roleTitle,
+    image: '/lifecode-result-balancer.jpg'
   },
   {
     id: 'guardian',
-    title: '守護者',
-    description: '守護價值，傳承信念',
-    image: '/lifecode-result-guardian.PNG'
+    title: LIFE_TYPES.guardian.displayName,
+    description: LIFE_TYPES.guardian.roleTitle,
+    image: '/lifecode-result-guardian.jpg'
   }
 ];
 
-export function Card({ card, className }: { card: any, className?: string }) {
+export function Card({ card, className, size }: { card: any, className?: string, size?: number }) {
   return (
-    <div className={`rounded-xl overflow-hidden shadow-sm border border-gray-100 ${className || ''}`}>
+    <div className={`rounded-xl overflow-hidden shadow-sm border border-gray-100 ${className || ''}`} style={size ? { width: size } : {}}>
       <img src={card.image} alt={card.title} className="w-full h-auto object-cover" />
     </div>
   );
 }
 
 // ============================================================================
-// 主要的分享頁面元件邏輯 (行動裝置優先 + 長按存圖)
+// 主要的分享頁面元件邏輯 (從 URL 取得結果)
 // ============================================================================
-interface QuizResult {
-  primaryType: string;
-  scores: Record<string, number>;
-}
-
 export default function ShareCards() {
+  const [, navigate] = useLocation();
   const printRef = useRef<HTMLDivElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
-  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const [lifeType, setLifeType] = useState<OperatingStyle | null>(null);
   const [isHtml2CanvasLoaded, setIsHtml2CanvasLoaded] = useState(false);
 
   // 動態加載 html2canvas 腳本
@@ -76,26 +74,35 @@ export default function ShareCards() {
     };
   }, []);
 
-  // 1. 取得使用者的問卷結果
+  // 1. 從 URL 取得測驗結果 (與 Result.tsx 保持一致)
   useEffect(() => {
-    const storedResult = localStorage.getItem('life_quiz_results');
-    if (storedResult) {
-      try {
-        setQuizResult(JSON.parse(storedResult));
-      } catch (e) {
-        console.error('無法解析測驗結果', e);
-      }
+    const params = new URLSearchParams(window.location.search);
+    const typeParam = params.get('type') as OperatingStyle;
+    
+    if (typeParam && LIFE_TYPES[typeParam]) {
+      setLifeType(typeParam);
     } else {
-      setQuizResult({
-        primaryType: 'Builder', 
-        scores: { Builder: 85, Explorer: 60, Balancer: 70, Guardian: 45 }
-      });
+      // 如果沒有 type，試著從 answers 解析
+      const answersParam = params.get('answers');
+      if (answersParam) {
+        try {
+          const parsedAnswers = JSON.parse(decodeURIComponent(answersParam));
+          const result = calculateLifeType(parsedAnswers);
+          setLifeType(result.primary);
+        } catch (e) {
+          console.error('無法解析測驗結果', e);
+          navigate('/');
+        }
+      } else {
+        // 預設回首頁，不顯示隨機數據
+        navigate('/');
+      }
     }
-  }, []);
+  }, [navigate]);
 
   // 2. 自動產生圖片邏輯
   useEffect(() => {
-    if (!quizResult || !printRef.current || !isHtml2CanvasLoaded) return;
+    if (!lifeType || !printRef.current || !isHtml2CanvasLoaded) return;
 
     const generateImage = async () => {
       try {
@@ -117,44 +124,23 @@ export default function ShareCards() {
 
     const timer = setTimeout(() => {
       generateImage();
-    }, 500);
+    }, 800);
 
     return () => clearTimeout(timer);
-  }, [quizResult, isHtml2CanvasLoaded]);
+  }, [lifeType, isHtml2CanvasLoaded]);
 
-  // 專屬動態文案組合
-  const shareText = `我在這個測驗中發現我的核心型態是【${quizResult?.primaryType || '未知'}】！\n各項能力指數：\n📍 建造者: ${quizResult?.scores['Builder'] || 0}\n📍 探索者: ${quizResult?.scores['Explorer'] || 0}\n📍 平衡者: ${quizResult?.scores['Balancer'] || 0}\n📍 守護者: ${quizResult?.scores['Guardian'] || 0}\n\n👉 快來發掘你的專屬型態：${window.location.origin}`;
+  if (!lifeType) return null;
 
-  // 3. 雙重保險複製機制
+  const typeData = LIFE_TYPES[lifeType];
+  const shareText = `我在【時光整理所】發現我的核心型態是【${typeData.displayName}】！\n\n「${typeData.roleTitle}」\n\n👉 快來發掘你的專屬型態：${window.location.origin}`;
+
   const handleCopyText = async () => {
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(shareText);
-        setCopyStatus('copied');
-      } else {
-        throw new Error('Clipboard API unavailable');
-      }
+      await navigator.clipboard.writeText(shareText);
+      setCopyStatus('copied');
     } catch (err) {
-      const textArea = document.createElement('textarea');
-      textArea.value = shareText;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      textArea.style.top = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      try {
-        document.execCommand('copy');
-        setCopyStatus('copied');
-      } catch (fallbackErr) {
-        console.error('Fallback copy failed', fallbackErr);
-        setCopyStatus('error');
-      } finally {
-        textArea.remove();
-      }
+      setCopyStatus('error');
     }
-
     setTimeout(() => setCopyStatus('idle'), 3000);
   };
 
@@ -162,16 +148,20 @@ export default function ShareCards() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-md space-y-6">
         
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">專屬結果分享卡</h1>
-          <p className="text-sm text-gray-500">已為您結合測驗分數與專屬分析</p>
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={() => window.history.back()} className="gap-2">
+            <ArrowLeft className="w-4 h-4" /> 返回
+          </Button>
+          <div className="text-right">
+            <h1 className="text-xl font-bold text-gray-900">專屬分享卡</h1>
+          </div>
         </div>
 
         <UICard className="overflow-hidden border-2 border-gray-100 shadow-md">
           <CardContent className="p-0 relative flex justify-center items-center min-h-[300px] bg-gray-100">
             {isGenerating ? (
-              <div className="flex flex-col items-center text-gray-400 space-y-3">
-                <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+              <div className="flex flex-col items-center text-gray-400 space-y-3 p-10 text-center">
+                <div className="w-8 h-8 border-4 border-gray-300 border-t-accent rounded-full animate-spin" />
                 <p className="text-sm">為您生成專屬圖卡中...</p>
               </div>
             ) : (
@@ -193,12 +183,6 @@ export default function ShareCards() {
           </CardContent>
         </UICard>
 
-        {!isGenerating && imageUrl && (
-          <p className="text-center text-xs text-gray-400 hidden sm:block">
-            電腦版用戶請「點擊右鍵」選擇「另存圖片」
-          </p>
-        )}
-
         <div className="space-y-4">
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm relative">
             <p className="text-sm text-gray-700 whitespace-pre-wrap font-sans">{shareText}</p>
@@ -206,64 +190,58 @@ export default function ShareCards() {
           
           <Button 
             onClick={handleCopyText} 
-            className="w-full py-6 text-lg font-medium tracking-wide transition-all"
+            className="w-full py-6 text-lg font-medium tracking-wide transition-all bg-accent hover:bg-accent/90 text-accent-foreground"
             variant={copyStatus === 'copied' ? 'outline' : 'default'}
           >
             {copyStatus === 'idle' && <><Copy className="w-5 h-5 mr-2" /> 複製專屬文案</>}
-            {copyStatus === 'copied' && <><CheckCircle2 className="w-5 h-5 mr-2 text-green-600" /> 已成功複製！快去貼上分享</>}
-            {copyStatus === 'error' && <><AlertCircle className="w-5 h-5 mr-2 text-red-500" /> 複製失敗，請手動選取上方文字</>}
+            {copyStatus === 'copied' && <><CheckCircle2 className="w-5 h-5 mr-2 text-green-600" /> 已成功複製！</>}
+            {copyStatus === 'error' && <><AlertCircle className="w-5 h-5 mr-2 text-red-500" /> 複製失敗，請手動複製</>}
           </Button>
         </div>
       </div>
 
+      {/* 隱藏的渲染區域 */}
       <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none z-[-1]">
         <div 
           ref={printRef} 
-          className="w-[1080px] h-[1080px] bg-[#f8fafc] flex flex-col items-center justify-between p-16 relative overflow-hidden"
-          style={{ fontFamily: '"Noto Sans TC", sans-serif' }}
+          className="w-[800px] h-[1000px] bg-[#FDFCFB] flex flex-col items-center justify-between p-12 relative overflow-hidden"
+          style={{ fontFamily: "'Noto Serif TC', serif" }}
         >
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#dbeafe] rounded-full opacity-60" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#f3e8ff] rounded-full opacity-60" />
+          {/* 背景裝飾 */}
+          <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: typeData.color, opacity: 0.1 }} />
+          <div style={{ position: 'absolute', bottom: -50, left: -50, width: 300, height: 300, borderRadius: '50%', background: typeData.accentColor, opacity: 0.08 }} />
 
-          <div className="text-center z-10 w-full mt-10">
-            <h2 className="text-4xl font-bold text-gray-500 tracking-widest mb-4">LIFE QUIZ</h2>
-            <h1 className="text-7xl font-extrabold text-slate-800 mb-6 drop-shadow-sm">
-              我的專屬型態：<span className="text-blue-600">{quizResult?.primaryType || '未知'}</span>
+          <div className="text-center z-10 w-full mt-8">
+            <div style={{ fontSize: 14, letterSpacing: '0.3em', color: typeData.accentColor, opacity: 0.8, marginBottom: 12 }}>GRAVITY OF HEART SYSTEM</div>
+            <div style={{ width: 60, height: 2, background: typeData.accentColor, margin: '0 auto 40px', opacity: 0.5 }} />
+            
+            <h1 style={{ fontSize: 64, fontWeight: 700, color: '#2A2420', marginBottom: 24, letterSpacing: '0.1em' }}>
+              {typeData.displayName}
             </h1>
-            <div className="w-32 h-2 bg-blue-600 mx-auto rounded-full" />
+            
+            <p style={{ fontSize: 24, color: typeData.accentColor, letterSpacing: '0.15em', fontStyle: 'italic' }}>
+              {typeData.roleTitle}
+            </p>
           </div>
 
-          <div className="w-full max-w-2xl bg-white/95 rounded-3xl p-12 shadow-xl z-10 border border-white">
-            <h3 className="text-3xl font-bold text-center text-slate-700 mb-8 border-b pb-4">能力分佈權重</h3>
-            <div className="grid grid-cols-2 gap-8">
-              {Object.entries(quizResult?.scores || {}).map(([key, value]) => (
-                <div key={key} className="flex flex-col space-y-2">
-                  <div className="flex justify-between items-end">
-                    <span className="text-2xl font-bold text-slate-600">{key}</span>
-                    <span className="text-3xl font-black text-blue-600">{value}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                    <div 
-                      className="bg-blue-500 h-4 rounded-full" 
-                      style={{ width: `${Math.min(100, Number(value))}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="w-full max-w-xl bg-white/40 rounded-2xl p-10 z-10 border border-white/60 backdrop-blur-sm">
+            <p style={{ fontSize: 22, lineHeight: 1.8, color: '#3D342E', textAlign: 'center', whiteSpace: 'pre-line' }}>
+              生活中的每個選擇，<br />
+              都是你在為自己整理出，<br />
+              最舒適的生命節奏。
+            </p>
           </div>
 
-          <div className="w-full flex justify-between items-end z-10 mb-8 px-8">
+          <div className="w-full flex justify-between items-end z-10 mb-4 px-4">
             <div className="flex flex-col">
-              <p className="text-3xl font-bold text-slate-800 mb-2">找到你的無限可能</p>
-              <p className="text-xl text-slate-500">掃描右方 QR Code，開始你的測驗</p>
+              <p style={{ fontSize: 28, fontWeight: 600, color: '#2A2420', marginBottom: 8 }}>時光整理所</p>
+              <p style={{ fontSize: 16, color: '#8C847E' }}>掃描 QR Code，探索你的生活節奏</p>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+            <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin)}&margin=10`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=3D342E&data=${encodeURIComponent(window.location.origin)}`}
                 alt="QR Code"
-                className="w-32 h-32"
-                crossOrigin="anonymous" 
+                className="w-24 h-24"
               />
             </div>
           </div>

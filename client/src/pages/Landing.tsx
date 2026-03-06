@@ -99,9 +99,13 @@ export default function Landing() {
 
           {/* 入口總卡 */}
           <div className="flex justify-center mb-12">
-            <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 40px rgba(100,80,60,0.12)', width: '100%', maxWidth: 400 }}>
-              <ShareCard card={shareCards.find(c => c.id === 'entry')!} size={400} />
-            </div>
+<div className="grid grid-cols-2 gap-4 sm:gap-6 mb-12">
+            {shareCards.map((card) => (
+              <div key={card.id} style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(100,80,60,0.1)' }}>
+                <ShareCard card={card} />
+              </div>
+            ))}
+          </div>
           </div>
 
           {/* Quick Info */}
