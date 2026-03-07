@@ -171,7 +171,7 @@ export default function Result() {
         // 強制設定字體，確保系統使用正確的字體
         ctx.textBaseline = 'top';
         ctx.textAlign = 'center';
-        ctx.fillStyle = cfg.subColor + 'CC';
+        ctx.fillStyle = cfg.subColor;  // 移除透明度，使用純色
         ctx.textAlign = 'left';
         ctx.fillText('Gravity of Heart System', 60, 80);
 
@@ -187,17 +187,20 @@ export default function Result() {
         ctx.lineTo(canvas.width - 80, 160);
         ctx.stroke();
 
-        // 主文案（sharingPrompt）- 優化行距與排版
+        // 主文案（sharingPrompt）- 動態置中排版
         ctx.font = "400 44px 'Noto Serif TC', Georgia, serif";
         ctx.fillStyle = cfg.textColor;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const mainText = content.sharingPrompt || '探索你的生活節奏';
         const lines = mainText.split('\n');
-        let textY = 320;  // 增加上邊距
+        const lineHeight = 80;  // 行距
+        const totalTextHeight = (lines.length - 1) * lineHeight;
+        const canvasMiddle = canvas.height / 2;
+        let textY = canvasMiddle - totalTextHeight / 2;  // 動態置中
         for (const line of lines) {
           ctx.fillText(line, canvas.width / 2, textY);
-          textY += 80;  // 增加行距從 70 到 80
+          textY += lineHeight;
         }
 
         // 底部區域
@@ -260,7 +263,7 @@ export default function Result() {
         // 右下角：掃碼提示
         ctx.font = "400 24px 'Noto Serif TC', Georgia, serif";
         ctx.textBaseline = 'top';
-        ctx.fillStyle = cfg.subColor + '99';
+        ctx.fillStyle = cfg.subColor;  // 移除透明度，使用純色
         ctx.textAlign = 'right';
         ctx.fillText('掃碼開始整理', canvas.width - 60, qrY - 20);
 
