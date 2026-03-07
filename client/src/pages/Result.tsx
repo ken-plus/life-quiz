@@ -239,8 +239,8 @@ export default function Result() {
         ctx.lineWidth = 2;  // 減少邊框寬度
         ctx.strokeRect(qrX, qrY, qrSize, qrSize);
 
-        // 生成 QR Code
-        const qrUrl = `${QUIZ_URL}/cards?type=${lifeType}`;
+        // 生成 QR Code - 導向問卷首頁
+        const qrUrl = QUIZ_URL;
         try {
           const qrCanvas = await QRCode.toCanvas(qrUrl, {
             width: qrSize,
@@ -431,25 +431,15 @@ export default function Result() {
                   )}
                 </div>
 
-                <div className="flex gap-4 justify-center">
-                  <Button
-                    onClick={handleDownloadCard}
-                    disabled={!cardImageUrl}
-                    className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
-                  >
-                    <Download className="w-4 h-4" /> 儲存圖片
-                  </Button>
-                </div>
-
                 <div className="mt-4 text-center text-sm text-muted-foreground">
                   手機長按或電腦右鍵即可儲存分享
                 </div>
               </Card>
             </div>
 
-            {/* 了解更多 */}
+            {/* 下一步行動 */}
             <div className="mb-12">
-              <h2 className="text-2xl font-semibold text-foreground mb-6">了解更多</h2>
+              <h2 className="text-2xl font-semibold text-foreground mb-6">下一步</h2>
               <Card className="p-8 border-border bg-card">
                 <p className="text-foreground leading-relaxed mb-8">{content.nextSteps}</p>
                 <Button
