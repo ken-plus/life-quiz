@@ -3,16 +3,16 @@
  * 設計骨架：原版質感
  * 修正：calculateLifeType 現在回傳 {primary, secondary, confidence, isMixed}
  * 新增：nextStepsCTA、lineOAUrl 欄位支援
+ * 終極優化：分享卡直接可儲存，無需跳轉
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LIFE_TYPES, calculateLifeType, OperatingStyle } from '@/lib/quizData';
 import { RESULT_CONTENTS } from '@/lib/resultContent';
 import { useLocation, useSearch } from 'wouter';
-import { Share2, ArrowLeft, ChevronRight, ChevronLeft, Copy, Check } from 'lucide-react';
-import { Card as ShareCard, cards as shareCards } from './ShareCards';
+import { ArrowLeft, ChevronRight, ChevronLeft, Download } from 'lucide-react';
 
 const typeConfig: Record<string, {
   zhName: string;
@@ -25,6 +25,8 @@ const typeConfig: Record<string, {
   orb1: string;
   orb2: string;
   symbol: string;
+  accentColor: string;
+  color: string;
 }> = {
   guardian: {
     zhName: '時光整理師',
@@ -37,6 +39,8 @@ const typeConfig: Record<string, {
     orb1: '#C9A876',
     orb2: '#D4B896',
     symbol: '◎',
+    accentColor: '#A0826D',
+    color: '#A0826D',
   },
   balancer: {
     zhName: '能量建築師',
@@ -48,420 +52,433 @@ const typeConfig: Record<string, {
     subColor: '#5F8B84',
     orb1: '#7BA89F',
     orb2: '#A8C4BF',
-    symbol: '⟡',
+    symbol: '◆',
+    accentColor: '#5F8B84',
+    color: '#5F8B84',
   },
   explorer: {
-    zhName: '生命航行引水人',
-    enName: 'THE NAVIGATOR',
-    tagline: '好奇探索 · 開放前行',
-    bg: '#EDE8DF',
-    accent: '#B88A5C',
-    textColor: '#352B1E',
-    subColor: '#B88A5C',
+    zhName: '探索者型',
+    enName: 'THE EXPLORER',
+    tagline: '好奇開放 · 新路先行',
+    bg: '#EBE8E0',
+    accent: '#B8956A',
+    textColor: '#3D342E',
+    subColor: '#B8956A',
     orb1: '#D4A574',
-    orb2: '#E8C89A',
-    symbol: '◈',
+    orb2: '#E0B896',
+    symbol: '◇',
+    accentColor: '#B8956A',
+    color: '#B8956A',
   },
   builder: {
     zhName: '秩序累積者',
     enName: 'THE BUILDER',
-    tagline: '系統思維 · 長期佈局',
-    bg: '#E9EDE4',
-    accent: '#6B7D54',
-    textColor: '#2A3020',
-    subColor: '#6B7D54',
-    orb1: '#8B9D6F',
-    orb2: '#B0C090',
-    symbol: '▣',
+    tagline: '系統思考 · 深度累積',
+    bg: '#E9EAE5',
+    accent: '#7A8F7E',
+    textColor: '#2F3A32',
+    subColor: '#7A8F7E',
+    orb1: '#9DB393',
+    orb2: '#B8C9AD',
+    symbol: '■',
+    accentColor: '#7A8F7E',
+    color: '#7A8F7E',
   },
 };
 
 export default function Result() {
   const [, navigate] = useLocation();
   const search = useSearch();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [lifeType, setLifeType] = useState<OperatingStyle | null>(null);
   const [isMixed, setIsMixed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [copied, setCopied] = useState(false);
+  const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
+  const [isGeneratingCard, setIsGeneratingCard] = useState(false);
 
+  // 解析 URL 參數
   useEffect(() => {
     const params = new URLSearchParams(search);
     const answersParam = params.get('answers');
 
-    if (answersParam) {
-      try {
-        const parsedAnswers = JSON.parse(decodeURIComponent(answersParam));
-        const result = calculateLifeType(parsedAnswers);
-        setLifeType(result.primary);
-        setIsMixed(result.isMixed);
-      } catch (error) {
-        console.error('Failed to parse answers:', error);
-        navigate('/');
-      }
-    } else {
+    if (!answersParam) {
+      navigate('/');
+      return;
+    }
+
+    try {
+      const parsedAnswers = JSON.parse(decodeURIComponent(answersParam));
+      const result = calculateLifeType(parsedAnswers);
+      setLifeType(result.primary);
+      setIsMixed(result.isMixed);
+    } catch (error) {
+      console.error('無法解析測驗結果', error);
       navigate('/');
     }
+  }, [search, navigate]);
 
-    setIsLoading(false);
-  }, [navigate, search]);
+  // 生成分享卡圖片（Canvas）
+  useEffect(() => {
+    if (!lifeType) return;
 
-  if (isLoading || !lifeType) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">載入中...</p>
-      </div>
-    );
-  }
+    const generateCardImage = async () => {
+      try {
+        setIsGeneratingCard(true);
+        const cfg = typeConfig[lifeType];
+        const content = RESULT_CONTENTS[lifeType];
+        const QUIZ_URL = window.location.origin;
 
-  const type = LIFE_TYPES[lifeType];
+        // 建立 Canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = 1080;
+        canvas.height = 1440;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('無法獲取 Canvas 上下文');
+
+        // 背景
+        ctx.fillStyle = cfg.bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 背景裝飾圓形
+        const gradient1 = ctx.createRadialGradient(canvas.width - 100, -100, 0, canvas.width - 100, -100, 300);
+        gradient1.addColorStop(0, cfg.orb1 + '33');
+        gradient1.addColorStop(1, cfg.orb1 + '00');
+        ctx.fillStyle = gradient1;
+        ctx.beginPath();
+        ctx.arc(canvas.width - 100, -100, 300, 0, Math.PI * 2);
+        ctx.fill();
+
+        const gradient2 = ctx.createRadialGradient(50, canvas.height + 50, 0, 50, canvas.height + 50, 250);
+        gradient2.addColorStop(0, cfg.orb2 + '2E');
+        gradient2.addColorStop(1, cfg.orb2 + '00');
+        ctx.fillStyle = gradient2;
+        ctx.beginPath();
+        ctx.arc(50, canvas.height + 50, 250, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 上方 Header
+        ctx.font = "500 32px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = cfg.subColor + 'CC';
+        ctx.textAlign = 'left';
+        ctx.fillText('Gravity of Heart System', 60, 80);
+
+        ctx.font = "600 40px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = cfg.textColor;
+        ctx.fillText(cfg.zhName, 60, 140);
+
+        // 分隔線
+        ctx.strokeStyle = cfg.accent + '80';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width - 80, 100);
+        ctx.lineTo(canvas.width - 80, 160);
+        ctx.stroke();
+
+        // 主文案（sharingPrompt）
+        ctx.font = "400 44px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = cfg.textColor;
+        ctx.textAlign = 'center';
+        const mainText = content.sharingPrompt || '探索你的生活節奏';
+        const lines = mainText.split('\n');
+        let textY = 300;
+        for (const line of lines) {
+          ctx.fillText(line, canvas.width / 2, textY);
+          textY += 70;
+        }
+
+        // 底部區域
+        // 左側：掃碼文案
+        ctx.font = "400 28px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = cfg.subColor;
+        ctx.textAlign = 'left';
+        const ctaText = content.nextStepsCTA.replace(' →', '') || '開始為未來佈局';
+        ctx.fillText(ctaText, 60, 1200);
+
+        // 底部分隔線
+        ctx.strokeStyle = cfg.accent + '40';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(60, 1240);
+        ctx.lineTo(canvas.width - 60, 1240);
+        ctx.stroke();
+
+        // 品牌名稱
+        ctx.font = "600 48px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = cfg.textColor;
+        ctx.textAlign = 'left';
+        ctx.fillText('時光整理所', 60, 1320);
+
+        ctx.font = "400 28px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = cfg.subColor;
+        ctx.fillText('探索屬於你的生活密碼', 60, 1380);
+
+        // 右下角：掃碼提示
+        ctx.font = "400 24px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = cfg.subColor + '99';
+        ctx.textAlign = 'right';
+        ctx.fillText('掃碼開始整理', canvas.width - 60, 1380);
+
+        // 轉換為圖片
+        const imageData = canvas.toDataURL('image/png', 1.0);
+        setCardImageUrl(imageData);
+      } catch (error) {
+        console.error('分享卡生成失敗:', error);
+      } finally {
+        setIsGeneratingCard(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      generateCardImage();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [lifeType]);
+
+  if (!lifeType) return null;
+
+  const cfg = typeConfig[lifeType];
   const content = RESULT_CONTENTS[lifeType];
 
-  const handleShare = () => {
-    const cardsUrl = `${window.location.origin}/cards?type=${lifeType}`;
-    const typeData = LIFE_TYPES[lifeType];
-    const text = `我是【${typeData.displayName}】，你現在是哪一型？\n\n探索你的生活節奏：${window.location.origin}\n分享圖卡：${cardsUrl}`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: '時光整理所',
-        text: text,
-      });
-    } else {
-      navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const handleDownloadCard = () => {
+    if (!cardImageUrl) return;
+    const link = document.createElement('a');
+    link.href = cardImageUrl;
+    link.download = `時光整理所-${cfg.zhName}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleCopyShareText = () => {
-    const cardsUrl = `${window.location.origin}/cards?type=${lifeType}`;
-    const typeData = LIFE_TYPES[lifeType];
-    const text = `我是【${typeData.displayName}】，你現在是哪一型？\n\n探索你的生活節奏：${window.location.origin}\n分享圖卡：${cardsUrl}`;
-    
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleGoToLineOA = () => {
+    window.open(content.lineOAUrl, '_blank');
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container py-4">
+      <div className="container py-8 sm:py-12">
+        {/* Header */}
+        <div className="mb-12">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="gap-2 text-muted-foreground hover:text-foreground"
+            className="gap-2 text-muted-foreground hover:text-foreground mb-8"
           >
-            <ArrowLeft className="w-4 h-4" />
-            重新開始
+            <ArrowLeft className="w-4 h-4" /> 返回首頁
           </Button>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="container py-12">
-        <div className="max-w-2xl mx-auto">
+        {/* Page 1: 結果介紹 */}
+        {currentPage === 1 && (
+          <>
+            <div className="mb-12">
+              {(() => {
+                return (
+                  <div style={{
+                    padding: '48px 32px',
+                    borderRadius: 20,
+                    background: cfg.bg,
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}>
+                    {/* 背景裝飾 */}
+                    <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: cfg.orb1, opacity: 0.15 }} />
+                    <div style={{ position: 'absolute', bottom: -80, left: -80, width: 300, height: 300, borderRadius: '50%', background: cfg.orb2, opacity: 0.12 }} />
 
-          {/* Page 1: Core Identity */}
-          {currentPage === 1 && (
-            <>
-              {/* Result Type Card */}
-              <div className="mb-12">
-                {(() => {
-                  const cfg = typeConfig[lifeType];
-                  return (
-                    <div style={{
-                      background: cfg.bg,
-                      borderRadius: 20,
-                      padding: '48px 40px',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      fontFamily: "'Noto Serif TC', Georgia, serif",
-                      boxShadow: '0 8px 40px rgba(100,80,60,0.12)',
-                    }}>
-                      {/* 背景裝飾圓 */}
+                    <div style={{ position: 'relative', zIndex: 10 }}>
                       <div style={{
-                        position: 'absolute', top: -60, right: -60,
-                        width: 220, height: 220, borderRadius: '50%',
-                        background: cfg.orb1, opacity: 0.2,
-                      }} />
-                      <div style={{
-                        position: 'absolute', bottom: -40, left: -40,
-                        width: 160, height: 160, borderRadius: '50%',
-                        background: cfg.orb2, opacity: 0.18,
-                      }} />
-
-                      {/* 上方英文標籤 */}
-                      <div style={{
-                        fontSize: 11, letterSpacing: '0.22em',
-                        color: cfg.subColor, opacity: 0.8,
-                        marginBottom: 8, position: 'relative',
+                        fontSize: 14, letterSpacing: '0.2em',
+                        color: cfg.subColor, marginBottom: 12,
                       }}>
-                        Gravity of Heart System
+                        {cfg.enName}
                       </div>
 
-                      {/* 裝飾線 */}
                       <div style={{
                         width: 40, height: 1.5,
                         background: cfg.accent, opacity: 0.5,
                         marginBottom: 28,
                       }} />
 
-                      {/* 主符號 */}
                       <div style={{
                         fontSize: 48, color: cfg.accent,
                         opacity: 0.25, lineHeight: 1,
-                        marginBottom: 16, position: 'relative',
+                        marginBottom: 16,
                       }}>
                         {cfg.symbol}
                       </div>
 
-                      {/* 英文類型名 */}
-                      <div style={{
-                        fontSize: 12, letterSpacing: '0.2em',
-                        color: cfg.subColor, marginBottom: 12,
-                        position: 'relative',
-                      }}>
-                        {cfg.enName}
-                      </div>
-
-                      {/* 中文類型名 */}
-                      <div style={{
-                        fontSize: 40, fontWeight: 600,
+                      <h1 style={{
+                        fontSize: 56, fontWeight: 600,
                         color: cfg.textColor, letterSpacing: '0.08em',
                         lineHeight: 1.3, marginBottom: 16,
-                        position: 'relative',
                       }}>
                         {cfg.zhName}
-                      </div>
+                      </h1>
 
-                      {/* tagline */}
                       <div style={{
-                        fontSize: 14, color: cfg.subColor,
+                        fontSize: 16, color: cfg.subColor,
                         letterSpacing: '0.12em', opacity: 0.85,
-                        position: 'relative',
                       }}>
                         {cfg.tagline}
                       </div>
                     </div>
-                  );
-                })()}
+                  </div>
+                );
+              })()}
+            </div>
 
-                <div className="mt-6">
-                  <h1 className="text-3xl font-bold text-foreground mb-2">{content.title}</h1>
-                  <p className="text-lg text-muted-foreground">{content.subtitle}</p>
-                  {isMixed && (
-                    <p className="text-sm text-muted-foreground mt-2 italic">
-                      你的答案非常均衡，這個型態是最接近的傾向。
-                    </p>
-                  )}
-                </div>
-              </div>
+            <div className="mb-12">
+              <h1 className="text-3xl font-bold text-foreground mb-2">{content.title}</h1>
+              <p className="text-lg text-muted-foreground">{content.subtitle}</p>
+              {isMixed && (
+                <p className="text-sm text-muted-foreground mt-2 italic">
+                  你的答案非常均衡，這個型態是最接近的傾向。
+                </p>
+              )}
+            </div>
 
-              {/* Introduction */}
-              <div className="mb-10">
-                <Card className="p-8 border-border bg-card">
-                  <p className="text-foreground leading-relaxed whitespace-pre-line">
-                    {content.introduction}
-                  </p>
-                </Card>
-              </div>
+            <div className="mb-10">
+              <Card className="p-8 border-border bg-card">
+                <p className="text-foreground leading-relaxed whitespace-pre-line">
+                  {content.introduction}
+                </p>
+              </Card>
+            </div>
 
-              {/* Self Awareness */}
-              <div className="mb-10">
-                <h2 className="text-2xl font-semibold text-foreground mb-6">你的生活節奏與感受</h2>
-                <Card className="p-8 border-border bg-card">
-                  <p className="text-foreground leading-relaxed whitespace-pre-line">
-                    {content.selfAwareness}
-                  </p>
-                </Card>
-              </div>
+            <div className="mb-10">
+              <h2 className="text-2xl font-semibold text-foreground mb-6">你的生活節奏與感受</h2>
+              <Card className="p-8 border-border bg-card">
+                <p className="text-foreground leading-relaxed whitespace-pre-line">
+                  {content.selfAwareness}
+                </p>
+              </Card>
+            </div>
+          </>
+        )}
 
-              {/* Inner Quote */}
-              <div className="mb-12 text-center">
-                <div className="inline-block border-l-4 pl-6" style={{ borderColor: type.color }}>
-                  <p className="text-xl font-semibold text-foreground italic">
-                    {content.selfAwareness.split('\n').filter(Boolean).pop()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex justify-between items-center mt-12 pt-8 border-t border-border">
-                <div className="text-sm text-muted-foreground">第 1 / 2 頁</div>
-                <Button
-                  onClick={() => { setCurrentPage(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
-                >
-                  下一步
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </>
-          )}
-
-          {/* Page 2: Action & Sharing */}
-          {currentPage === 2 && (
-            <>
-              {/* Tips */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-8">三步微行動</h2>
-                <div className="space-y-6">
-                  {content.tips.map((tip, index) => (
-                    <Card key={index} className="p-6 border-border bg-card hover:shadow-md transition-shadow">
-                      <div className="flex gap-4">
-                        <div
-                          className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                          style={{ backgroundColor: type.accentColor }}
-                        >
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-2 text-lg">{tip.title}</h3>
-                          <p className="text-foreground/80 mb-3 leading-relaxed">{tip.description}</p>
-                          <p className="text-sm font-medium" style={{ color: type.color }}>
-                            {tip.timeframe}
-                          </p>
-                        </div>
+        {/* Page 2: 分享與行動 */}
+        {currentPage === 2 && (
+          <>
+            <div className="mb-12">
+              <h2 className="text-2xl font-semibold text-foreground mb-8">三步微行動</h2>
+              <div className="space-y-6">
+                {content.tips.map((tip, index) => (
+                  <Card key={index} className="p-6 border-border bg-card hover:shadow-md transition-shadow">
+                    <div className="flex gap-4">
+                      <div
+                        className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                        style={{ backgroundColor: cfg.accentColor }}
+                      >
+                        {index + 1}
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sharing Section */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-6">分享你的日常</h2>
-                <Card className="p-8 border-border bg-card">
-
-                  {/* 個人化分享卡 - sharingPrompt 在卡片內 */}
-                  <div className="mb-4 flex justify-center">
-                    {(() => {
-                      const cfg = typeConfig[lifeType];
-                      const QUIZ_URL = window.location.origin;
-                      const QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=8B7355&bgcolor=F5F0E8&data=${encodeURIComponent(QUIZ_URL)}`;
-                      return (
-                    <div style={{
-                      width: '100%', maxWidth: 480, position: 'relative', overflow: 'hidden',
-                      borderRadius: 16, fontFamily: "'Noto Serif TC', Georgia, serif",
-                      boxShadow: '0 4px 24px rgba(100,80,60,0.15)',
-                      background: cfg.bg,
-                    }}>
-                      {/* 背景裝飾 */}
-                      <div style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: cfg.orb1, opacity: 0.2 }} />
-                      <div style={{ position: 'absolute', bottom: -30, left: -30, width: 130, height: 130, borderRadius: '50%', background: cfg.orb2, opacity: 0.18 }} />
-
-                      <div style={{ padding: '32px 28px', position: 'relative' }}>
-                        {/* 上方 header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-                          <div>
-                            <div style={{ fontSize: 10, letterSpacing: '0.18em', color: cfg.subColor, opacity: 0.8, marginBottom: 4 }}>
-                              Gravity of Heart System
-                            </div>
-                            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.08em', color: cfg.textColor }}>
-                              {cfg.zhName}
-                            </div>
-                          </div>
-                          <div style={{ width: 30, height: 1.5, background: cfg.accent, opacity: 0.5, marginTop: 14 }} />
-                        </div>
-
-                        {/* 主文字：sharingPrompt */}
-                        <div style={{ fontSize: 15, lineHeight: 1.9, color: cfg.textColor, letterSpacing: '0.04em', marginBottom: 28, whiteSpace: 'pre-line' }}>
-                          {content.sharingPrompt}
-                        </div>
-
-                        {/* 底部：掃碼文案（根據類型動態生成） */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                          <div>
-                            <div style={{ fontSize: 11, color: cfg.subColor, letterSpacing: '0.1em', opacity: 0.75, marginBottom: 6 }}>
-                              {content.nextStepsCTA.replace(' →', '')}
-                            </div>
-                            <div style={{ width: 30, height: 1, background: cfg.accent, opacity: 0.35 }} />
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                            <div style={{ padding: 5, background: cfg.bg, borderRadius: 6, border: `1px solid ${cfg.accent}33` }}>
-                              <img src={QR_URL} width={60} height={60} alt="QR" style={{ display: 'block' }} />
-                            </div>
-                            <div style={{ fontSize: 8, color: cfg.subColor, letterSpacing: '0.1em', opacity: 0.6 }}>掃碼開始整理</div>
-                          </div>
-                        </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-foreground mb-2 text-lg">{tip.title}</h3>
+                        <p className="text-foreground/80 mb-3 leading-relaxed">{tip.description}</p>
+                        <p className="text-sm font-medium" style={{ color: cfg.color }}>
+                          {tip.timeframe}
+                        </p>
                       </div>
                     </div>
-                      );
-                    })()}
-                  </div>
-                  <p className="text-center text-sm text-muted-foreground mb-8">手機截圖或電腦截圖，都可以分享給朋友</p>
-
-                  <div className="space-y-3">
-                    <Button
-                      onClick={handleShare}
-                      className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-base"
-                    >
-                      <Share2 className="w-5 h-5" />
-                      分享給朋友
-                    </Button>
-                    <Button
-                      onClick={handleCopyShareText}
-                      variant="outline"
-                      className="w-full gap-2 py-6 text-base"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-5 h-5" />
-                          已複製
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-5 h-5" />
-                          複製分享文案
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </Card>
+                  </Card>
+                ))}
               </div>
+            </div>
 
-              {/* Next Steps */}
-              <div className="mb-12">
-                <h2 className="text-2xl font-semibold text-foreground mb-6">了解更多</h2>
-                <Card className="p-8 border-border bg-card">
-                  <p className="text-foreground leading-relaxed mb-8">{content.nextSteps}</p>
-                  <Button
-                    onClick={() => window.open(content.lineOAUrl, '_blank')}
-                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-base"
-                  >
-                    {content.nextStepsCTA}
-                  </Button>
-                </Card>
-              </div>
+            {/* 分享卡片區 - 直接可儲存 */}
+            <div className="mb-12">
+              <h2 className="text-2xl font-semibold text-foreground mb-6">分享你的日常</h2>
+              <Card className="p-8 border-border bg-card">
+                <div className="mb-6 flex justify-center">
+                  {cardImageUrl ? (
+                    <div className="relative group max-w-md w-full">
+                      <img
+                        src={cardImageUrl}
+                        alt="分享卡片"
+                        className="w-full h-auto rounded-lg shadow-lg border border-border"
+                      />
+                      <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none" />
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none">
+                        <span className="bg-black/60 text-white text-xs tracking-widest px-4 py-2 rounded-full backdrop-blur-md shadow-lg">
+                          手機長按圖片可直接儲存
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-md h-96 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-3 border-gray-300 border-t-accent rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-sm text-gray-500">為您精心製作卡片中...</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-              {/* Footer Note */}
-              <div className="text-center text-sm text-muted-foreground mb-12 p-6 rounded-lg bg-background border border-border">
-                <p>
-                  這份問卷基於你的生活傾向設計，
-                  <br />
-                  呈現你在日常中自然展現的節奏與你的感受。
-                </p>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex justify-between items-center mt-12 pt-8 border-t border-border">
                 <Button
-                  variant="outline"
-                  onClick={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="gap-2"
+                  onClick={handleDownloadCard}
+                  disabled={!cardImageUrl}
+                  className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-base mb-4"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                  上一步
+                  <Download className="w-5 h-5" /> 儲存圖片
                 </Button>
-                <div className="text-sm text-muted-foreground">第 2 / 2 頁</div>
-              </div>
-            </>
-          )}
+
+                <p className="text-center text-sm text-muted-foreground">
+                  手機長按或電腦右鍵即可儲存分享
+                </p>
+              </Card>
+            </div>
+
+            {/* 下一步 */}
+            <div className="mb-12">
+              <h2 className="text-2xl font-semibold text-foreground mb-6">了解更多</h2>
+              <Card className="p-8 border-border bg-card">
+                <p className="text-foreground leading-relaxed mb-8">{content.nextSteps}</p>
+                <Button
+                  onClick={handleGoToLineOA}
+                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-base"
+                >
+                  {content.nextStepsCTA}
+                </Button>
+              </Card>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center text-sm text-muted-foreground mb-12 p-6 rounded-lg bg-background border border-border">
+              <p>
+                這份問卷基於你的生活傾向設計，
+                <br />
+                呈現你在日常中自然展現的節奏與你的感受。
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* 分頁控制 */}
+        <div className="flex justify-between items-center mt-12 pt-8 border-t border-border">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" /> 上一頁
+          </Button>
+
+          <div className="text-sm text-muted-foreground">
+            第 {currentPage} / 2 頁
+          </div>
+
+          <Button
+            onClick={() => setCurrentPage(2)}
+            disabled={currentPage === 2}
+            className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+          >
+            下一頁 <ChevronRight className="w-4 h-4" />
+          </Button>
         </div>
       </div>
+
+      {/* 隱藏的 Canvas 參考 */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
     </div>
   );
 }
