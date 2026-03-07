@@ -124,6 +124,14 @@ export default function Result() {
     const generateCardImage = async () => {
       setIsGeneratingCard(true);
       try {
+        // 等待字體完全載入
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        } else {
+          // 備用方案：等待 500ms 確保字體載入
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
         const cfg = typeConfig[lifeType];
         const content = RESULT_CONTENTS[lifeType];
         const QUIZ_URL = window.location.origin;
@@ -156,8 +164,11 @@ export default function Result() {
         ctx.arc(50, canvas.height + 50, 250, 0, Math.PI * 2);
         ctx.fill();
 
-        // 上方 Header
+        // 上方 Header - 確保字體已載入
         ctx.font = "500 32px 'Noto Serif TC', Georgia, serif";
+        // 強制設定字體，確保系統使用正確的字體
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'center';
         ctx.fillStyle = cfg.subColor + 'CC';
         ctx.textAlign = 'left';
         ctx.fillText('Gravity of Heart System', 60, 80);
@@ -178,6 +189,7 @@ export default function Result() {
         ctx.font = "400 44px 'Noto Serif TC', Georgia, serif";
         ctx.fillStyle = cfg.textColor;
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         const mainText = content.sharingPrompt || '探索你的生活節奏';
         const lines = mainText.split('\n');
         let textY = 320;  // 增加上邊距
@@ -189,6 +201,7 @@ export default function Result() {
         // 底部區域
         // 左側：掃碼文案
         ctx.font = "400 28px 'Noto Serif TC', Georgia, serif";
+        ctx.textBaseline = 'top';
         ctx.fillStyle = cfg.subColor;
         ctx.textAlign = 'left';
         const ctaText = content.nextStepsCTA.replace(' →', '') || '開始為未來佈局';
@@ -244,6 +257,7 @@ export default function Result() {
 
         // 右下角：掃碼提示
         ctx.font = "400 24px 'Noto Serif TC', Georgia, serif";
+        ctx.textBaseline = 'top';
         ctx.fillStyle = cfg.subColor + '99';
         ctx.textAlign = 'right';
         ctx.fillText('掃碼開始整理', canvas.width - 60, qrY - 20);
