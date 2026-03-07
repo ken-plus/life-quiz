@@ -118,15 +118,16 @@ export default function Result() {
 
   const handleShare = () => {
     const cardsUrl = `${window.location.origin}/cards?type=${lifeType}`;
-    const text = `${content.shareText}\n\n探索你的生活節奏：${window.location.origin}`;
+    const typeData = LIFE_TYPES[lifeType];
+    const text = `我是【${typeData.displayName}】，你現在是哪一型？\n\n探索你的生活節奏：${window.location.origin}\n分享圖卡：${cardsUrl}`;
+    
     if (navigator.share) {
       navigator.share({
         title: '時光整理所',
         text: text,
-        url: cardsUrl,
       });
     } else {
-      navigator.clipboard.writeText(`${text}\n分享圖卡：${cardsUrl}`);
+      navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -134,7 +135,9 @@ export default function Result() {
 
   const handleCopyShareText = () => {
     const cardsUrl = `${window.location.origin}/cards?type=${lifeType}`;
-    const text = `${content.shareText}\n\n探索你的生活節奏：${window.location.origin}\n分享圖卡：${cardsUrl}`;
+    const typeData = LIFE_TYPES[lifeType];
+    const text = `我是【${typeData.displayName}】，你現在是哪一型？\n\n探索你的生活節奏：${window.location.origin}\n分享圖卡：${cardsUrl}`;
+    
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

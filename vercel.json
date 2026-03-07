@@ -1,5 +1,11 @@
 {
-"buildCommand": "pnpm run build",
-"outputDirectory": "dist/public",
-"framework": null
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist/public",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/((?!assets/|lifecode-result-|favicon.ico).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

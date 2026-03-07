@@ -97,15 +97,22 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* 入口總卡 */}
-          <div className="flex justify-center mb-12">
-<div className="grid grid-cols-2 gap-4 sm:gap-6 mb-12">
+          {/* 身份預覽卡片展示區 */}
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-12">
             {shareCards.map((card) => (
-              <div key={card.id} style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(100,80,60,0.1)' }}>
-                <ShareCard card={card} />
+              <div key={card.id} className="relative group">
+                <div className="absolute -top-2 -left-2 z-10 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md border border-gray-100 shadow-sm text-[10px] font-medium text-gray-500">
+                  {card.title}
+                </div>
+                <div className="rounded-xl overflow-hidden shadow-md border border-gray-100 transition-transform duration-300 group-hover:scale-[1.02]">
+                  <img 
+                    src={card.image} 
+                    alt={card.title} 
+                    className="w-full h-auto object-cover aspect-[3/4]" 
+                  />
+                </div>
               </div>
             ))}
-          </div>
           </div>
 
           {/* Quick Info */}
