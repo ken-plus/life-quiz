@@ -58,8 +58,8 @@ const typeConfig: Record<string, {
     color: '#5F8B84',
   },
   explorer: {
-    zhName: '探索者型',
-    enName: 'THE EXPLORER',
+    zhName: '生命航行引水人',
+    enName: 'THE NAVIGATOR',
     tagline: '好奇開放 · 新路先行',
     bg: '#EBE8E0',
     accent: '#B8956A',
@@ -135,13 +135,13 @@ export default function Result() {
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('無法獲取 Canvas 上下文');
 
-        // 背景
+        // 背景 - 使用更清透的色調
         ctx.fillStyle = cfg.bg;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 背景裝飾圓形
+        // 背景裝飾圓形 - 降低不透明度，增加明亮感
         const gradient1 = ctx.createRadialGradient(canvas.width - 100, -100, 0, canvas.width - 100, -100, 300);
-        gradient1.addColorStop(0, cfg.orb1 + '33');
+        gradient1.addColorStop(0, cfg.orb1 + '15');  // 從 33 改為 15，更透明
         gradient1.addColorStop(1, cfg.orb1 + '00');
         ctx.fillStyle = gradient1;
         ctx.beginPath();
@@ -149,7 +149,7 @@ export default function Result() {
         ctx.fill();
 
         const gradient2 = ctx.createRadialGradient(50, canvas.height + 50, 0, 50, canvas.height + 50, 250);
-        gradient2.addColorStop(0, cfg.orb2 + '2E');
+        gradient2.addColorStop(0, cfg.orb2 + '12');  // 從 2E 改為 12，更透明
         gradient2.addColorStop(1, cfg.orb2 + '00');
         ctx.fillStyle = gradient2;
         ctx.beginPath();
@@ -174,16 +174,16 @@ export default function Result() {
         ctx.lineTo(canvas.width - 80, 160);
         ctx.stroke();
 
-        // 主文案（sharingPrompt）
+        // 主文案（sharingPrompt）- 優化行距與排版
         ctx.font = "400 44px 'Noto Serif TC', Georgia, serif";
         ctx.fillStyle = cfg.textColor;
         ctx.textAlign = 'center';
         const mainText = content.sharingPrompt || '探索你的生活節奏';
         const lines = mainText.split('\n');
-        let textY = 300;
+        let textY = 320;  // 增加上邊距
         for (const line of lines) {
           ctx.fillText(line, canvas.width / 2, textY);
-          textY += 70;
+          textY += 80;  // 增加行距從 70 到 80
         }
 
         // 底部區域
@@ -217,13 +217,13 @@ export default function Result() {
         const qrX = canvas.width - qrSize - 60;
         const qrY = canvas.height - qrSize - 60;
 
-        // QR Code 背景（白色方塊）
+        // QR Code 背景（白色方塊）- 增加陰影效果
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(qrX, qrY, qrSize, qrSize);
 
-        // 邊框
-        ctx.strokeStyle = cfg.accent + '60';
-        ctx.lineWidth = 3;
+        // 邊框 - 使用深灰而非純色，融入品牌
+        ctx.strokeStyle = cfg.accent + '40';  // 降低邊框不透明度
+        ctx.lineWidth = 2;  // 減少邊框寬度
         ctx.strokeRect(qrX, qrY, qrSize, qrSize);
 
         // 生成 QR Code
@@ -233,7 +233,7 @@ export default function Result() {
             width: qrSize,
             margin: 0,
             color: {
-              dark: '#000000',
+              dark: cfg.textColor,  // 使用品牌色而非純黑
               light: '#FFFFFF',
             },
           });
