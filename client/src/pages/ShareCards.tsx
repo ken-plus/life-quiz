@@ -121,9 +121,9 @@ export default function ShareCards() {
 
         // 上方標題區
         ctx.font = "500 28px 'Noto Serif TC', Georgia, serif";
-        ctx.fillStyle = typeData.accentColor + 'B3';
+        ctx.fillStyle = typeData.accentColor + 'CC';  // 恢復透明度
         ctx.textAlign = 'center';
-        ctx.fillText('GRAVITY OF HEART SYSTEM', width / 2, 80);
+        ctx.fillText('Gravity of Heart System', width / 2, 80);
 
         // 分隔線
         ctx.strokeStyle = typeData.accentColor + '4D';
@@ -169,15 +169,18 @@ export default function ShareCards() {
         const lines = typeData.displayName.split('');
         ctx.fillText(typeData.displayName, width / 2, cardY + cardHeight / 2);
 
-        // 主文案區
+        // 主文案區 - 使用 sharingPrompt 並動態置中
         ctx.font = "400 36px 'Noto Serif TC', Georgia, serif";
         ctx.fillStyle = '#3D342E';
-        const mainText = resultContent.nextStepsCTA.replace(' →', '');
+        const mainText = resultContent.sharingPrompt || '探索你的生活節奏';
         const textLines = mainText.split('\n');
-        let textY = 1050;
+        const lineHeight = 70;  // 行距
+        const totalHeight = (textLines.length - 1) * lineHeight;
+        const centerY = 1100;  // 中央位置
+        let textY = centerY - totalHeight / 2;  // 動態置中
         for (const line of textLines) {
           ctx.fillText(line, width / 2, textY);
-          textY += 60;
+          textY += lineHeight;
         }
 
         // 底部品牌區
@@ -192,7 +195,7 @@ export default function ShareCards() {
 
         // QR Code 提示文字（右下角）
         ctx.font = "400 20px 'Noto Serif TC', Georgia, serif";
-        ctx.fillStyle = typeData.accentColor + '99';
+        ctx.fillStyle = typeData.accentColor + 'CC';  // 恢復透明度
         ctx.textAlign = 'right';
         ctx.fillText('掃碼開始整理', width - 60, 1370);
 

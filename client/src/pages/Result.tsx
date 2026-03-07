@@ -171,7 +171,7 @@ export default function Result() {
         // 強制設定字體，確保系統使用正確的字體
         ctx.textBaseline = 'top';
         ctx.textAlign = 'center';
-        ctx.fillStyle = cfg.subColor;  // 移除透明度，使用純色
+        ctx.fillStyle = cfg.subColor + 'CC';  // 恢復透明度，維持設計質感
         ctx.textAlign = 'left';
         ctx.fillText('Gravity of Heart System', 60, 80);
 
@@ -263,7 +263,7 @@ export default function Result() {
         // 右下角：掃碼提示
         ctx.font = "400 24px 'Noto Serif TC', Georgia, serif";
         ctx.textBaseline = 'top';
-        ctx.fillStyle = cfg.subColor;  // 移除透明度，使用純色
+        ctx.fillStyle = cfg.subColor + '99';  // 恢復透明度，維持設計質感
         ctx.textAlign = 'right';
         ctx.fillText('掃碼開始整理', canvas.width - 60, qrY - 20);
 
