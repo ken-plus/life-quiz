@@ -1,4 +1,4 @@
-/**
+/*
  * 時光整理所 結果頁面
  * 設計骨架：原版質感
  * 修正：calculateLifeType 現在回傳 {primary, secondary, confidence, isMixed}
@@ -13,6 +13,7 @@ import { LIFE_TYPES, calculateLifeType, OperatingStyle } from '@/lib/quizData';
 import { RESULT_CONTENTS } from '@/lib/resultContent';
 import { useLocation, useSearch } from 'wouter';
 import { ArrowLeft, ChevronRight, ChevronLeft, Download } from 'lucide-react';
+import QRCode from 'qrcode';
 
 const typeConfig: Record<string, {
   zhName: string;
@@ -99,31 +100,30 @@ export default function Result() {
   // 解析 URL 參數
   useEffect(() => {
     const params = new URLSearchParams(search);
-    const answersParam = params.get('answers');
-
-    if (!answersParam) {
+    const answersStr = params.get('answers');
+    if (!answersStr) {
       navigate('/');
       return;
     }
 
     try {
-      const parsedAnswers = JSON.parse(decodeURIComponent(answersParam));
-      const result = calculateLifeType(parsedAnswers);
+      const answers = JSON.parse(decodeURIComponent(answersStr));
+      const result = calculateLifeType(answers);
       setLifeType(result.primary);
       setIsMixed(result.isMixed);
     } catch (error) {
-      console.error('無法解析測驗結果', error);
+      console.error('解析答案失敗:', error);
       navigate('/');
     }
   }, [search, navigate]);
 
-  // 生成分享卡圖片（Canvas）
+  // 生成分享卡圖片
   useEffect(() => {
     if (!lifeType) return;
 
     const generateCardImage = async () => {
+      setIsGeneratingCard(true);
       try {
-        setIsGeneratingCard(true);
         const cfg = typeConfig[lifeType];
         const content = RESULT_CONTENTS[lifeType];
         const QUIZ_URL = window.location.origin;
@@ -212,11 +212,41 @@ export default function Result() {
         ctx.fillStyle = cfg.subColor;
         ctx.fillText('探索屬於你的生活密碼', 60, 1380);
 
+        // 右下角：QR Code 區域
+        const qrSize = 200;
+        const qrX = canvas.width - qrSize - 60;
+        const qrY = canvas.height - qrSize - 60;
+
+        // QR Code 背景（白色方塊）
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(qrX, qrY, qrSize, qrSize);
+
+        // 邊框
+        ctx.strokeStyle = cfg.accent + '60';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+
+        // 生成 QR Code
+        const qrUrl = `${QUIZ_URL}/cards?type=${lifeType}`;
+        try {
+          const qrCanvas = await QRCode.toCanvas(qrUrl, {
+            width: qrSize,
+            margin: 0,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF',
+            },
+          });
+          ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+        } catch (qrError) {
+          console.warn('QR Code 生成失敗，使用預設樣式:', qrError);
+        }
+
         // 右下角：掃碼提示
         ctx.font = "400 24px 'Noto Serif TC', Georgia, serif";
         ctx.fillStyle = cfg.subColor + '99';
         ctx.textAlign = 'right';
-        ctx.fillText('掃碼開始整理', canvas.width - 60, 1380);
+        ctx.fillText('掃碼開始整理', canvas.width - 60, qrY - 20);
 
         // 轉換為圖片
         const imageData = canvas.toDataURL('image/png', 1.0);
@@ -255,14 +285,14 @@ export default function Result() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container py-8 sm:py-12">
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Header */}
-        <div className="mb-12">
+        <div className="flex justify-between items-center mb-12">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="gap-2 text-muted-foreground hover:text-foreground mb-8"
+            className="gap-2"
           >
             <ArrowLeft className="w-4 h-4" /> 返回首頁
           </Button>
@@ -274,31 +304,8 @@ export default function Result() {
             <div className="mb-12">
               {(() => {
                 return (
-                  <div style={{
-                    padding: '48px 32px',
-                    borderRadius: 20,
-                    background: cfg.bg,
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}>
-                    {/* 背景裝飾 */}
-                    <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: cfg.orb1, opacity: 0.15 }} />
-                    <div style={{ position: 'absolute', bottom: -80, left: -80, width: 300, height: 300, borderRadius: '50%', background: cfg.orb2, opacity: 0.12 }} />
-
-                    <div style={{ position: 'relative', zIndex: 10 }}>
-                      <div style={{
-                        fontSize: 14, letterSpacing: '0.2em',
-                        color: cfg.subColor, marginBottom: 12,
-                      }}>
-                        {cfg.enName}
-                      </div>
-
-                      <div style={{
-                        width: 40, height: 1.5,
-                        background: cfg.accent, opacity: 0.5,
-                        marginBottom: 28,
-                      }} />
-
+                  <div className="mb-12 p-8 rounded-lg" style={{ backgroundColor: cfg.bg }}>
+                    <div className="space-y-4">
                       <div style={{
                         fontSize: 48, color: cfg.accent,
                         opacity: 0.25, lineHeight: 1,
@@ -398,36 +405,35 @@ export default function Result() {
                       />
                       <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none" />
                       <div className="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none">
-                        <span className="bg-black/60 text-white text-xs tracking-widest px-4 py-2 rounded-full backdrop-blur-md shadow-lg">
+                        <span className="text-xs text-white/80 bg-black/40 px-3 py-1 rounded-full">
                           手機長按圖片可直接儲存
                         </span>
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full max-w-md h-96 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-8 h-8 border-3 border-gray-300 border-t-accent rounded-full animate-spin mx-auto mb-4" />
-                        <p className="text-sm text-gray-500">為您精心製作卡片中...</p>
-                      </div>
+                    <div className="w-full aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">{isGeneratingCard ? '生成中...' : '無法生成卡片'}</p>
                     </div>
                   )}
                 </div>
 
-                <Button
-                  onClick={handleDownloadCard}
-                  disabled={!cardImageUrl}
-                  className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-base mb-4"
-                >
-                  <Download className="w-5 h-5" /> 儲存圖片
-                </Button>
+                <div className="flex gap-4 justify-center">
+                  <Button
+                    onClick={handleDownloadCard}
+                    disabled={!cardImageUrl}
+                    className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+                  >
+                    <Download className="w-4 h-4" /> 儲存圖片
+                  </Button>
+                </div>
 
-                <p className="text-center text-sm text-muted-foreground">
+                <div className="mt-4 text-center text-sm text-muted-foreground">
                   手機長按或電腦右鍵即可儲存分享
-                </p>
+                </div>
               </Card>
             </div>
 
-            {/* 下一步 */}
+            {/* 了解更多 */}
             <div className="mb-12">
               <h2 className="text-2xl font-semibold text-foreground mb-6">了解更多</h2>
               <Card className="p-8 border-border bg-card">
@@ -456,7 +462,10 @@ export default function Result() {
         <div className="flex justify-between items-center mt-12 pt-8 border-t border-border">
           <Button
             variant="outline"
-            onClick={() => setCurrentPage(1)}
+            onClick={() => {
+              setCurrentPage(1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             disabled={currentPage === 1}
             className="gap-2"
           >
@@ -468,7 +477,10 @@ export default function Result() {
           </div>
 
           <Button
-            onClick={() => setCurrentPage(2)}
+            onClick={() => {
+              setCurrentPage(2);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             disabled={currentPage === 2}
             className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
           >
