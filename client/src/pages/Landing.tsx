@@ -1,7 +1,7 @@
 /**
  * 時光整理所 著陸頁面
  * 設計骨架：原版質感與架構
- * 內容：v2 新版文案與型態
+ * 內容：v3 新版首頁概念圖 + 統一文案
  */
 
 import { useLocation } from 'wouter';
@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { LIFE_TYPES } from '@/lib/quizData';
-import { Card as ShareCard, cards as shareCards } from './ShareCards';
 
 export default function Landing() {
   const [, navigate] = useLocation();
@@ -39,37 +38,26 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div
-        className="relative py-20 px-4 sm:py-32 overflow-hidden"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=600&fit=crop)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40" />
-
-        {/* Content */}
+      {/* Hero Section - 簡潔文字導入 */}
+      <div className="relative py-16 px-4 sm:py-24 overflow-hidden bg-gradient-to-b from-background to-secondary/20">
         <div className="container relative z-10">
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
-              你的生活，其實有一套
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-6 leading-tight" style={{ fontFamily: "'Noto Serif TC', Georgia, serif" }}>
+              我們把生活中那些日常的小瞬間，
               <br />
-              默默運作的邏輯與節奏
+              整理成 21 個生活選擇
             </h1>
 
-            <p className="text-lg sm:text-xl text-white/90 mb-8 leading-relaxed">
-              這不是考試，沒有標準答案。
+            <p className="text-base sm:text-lg text-foreground/80 mb-8 leading-relaxed">
+              沒有對錯，沒有標準答案。
               <br />
-              只是當邏輯與感受對話時，你想著什麼？
+              只有當下這一刻屬於你的感受、你的邏輯還有你的生活節奏。
             </p>
 
             <Button
               onClick={() => navigate('/quiz')}
               size="lg"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-lg px-8 py-6"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-base px-8 py-6"
             >
               開始一場實驗 <ArrowRight className="w-5 h-5" />
             </Button>
@@ -77,48 +65,22 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Introduction Section */}
-      <div className="container py-16 sm:py-24">
-        <div className="max-w-2xl mx-auto mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">
-              我們把生活中那些日常的小瞬間，
-              <br />
-              整理成 21 個生活選擇
-            </h2>
-
-            <div className="space-y-4 text-foreground/80 leading-relaxed">
-              <p>沒有對錯，沒有標準答案。</p>
-              <p className="font-medium">
-                只有當下這一刻屬於你的感受
-                <br />
-                你的邏輯還有你的生活節奏。
-              </p>
-            </div>
+      {/* Main Concept Image Section */}
+      <div className="container py-12 sm:py-20">
+        <div className="max-w-2xl mx-auto">
+          {/* 概念圖卡 - 時光整理所的靈魂呈現 */}
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-white">
+            <img 
+              src="/hero-landing-concept.png" 
+              alt="時光整理所：這不是測驗你的能力，而是一場把混亂整理成秩序的實驗。" 
+              className="w-full h-auto object-cover"
+            />
           </div>
 
-          {/* 身份預覽卡片展示區 */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-12">
-            {shareCards.map((card) => (
-              <div key={card.id} className="relative group">
-                <div className="absolute -top-2 -left-2 z-10 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md border border-gray-100 shadow-sm text-[10px] font-medium text-gray-500">
-                  {card.title}
-                </div>
-                <div className="rounded-xl overflow-hidden shadow-md border border-gray-100 transition-transform duration-300 group-hover:scale-[1.02]">
-                  <img 
-                    src={card.image} 
-                    alt={card.title} 
-                    className="w-full h-auto object-cover aspect-[3/4]" 
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Quick Info */}
-          <Card className="p-6 sm:p-8 bg-card border-border">
+          {/* 補充說明 */}
+          <Card className="p-6 sm:p-8 bg-card border-border mt-8">
             <div className="space-y-4 text-center">
-              <p className="text-lg font-medium text-foreground">
+              <p className="text-lg font-medium text-foreground" style={{ fontFamily: "'Noto Serif TC', Georgia, serif" }}>
                 填寫時間：約 3–5 分鐘
               </p>
               <p className="text-foreground/70">
@@ -133,7 +95,7 @@ export default function Landing() {
       <div className="bg-secondary/30 py-16 sm:py-24">
         <div className="container">
           <div className="max-w-3xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-foreground text-center mb-4">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-foreground text-center mb-4" style={{ fontFamily: "'Noto Serif TC', Georgia, serif" }}>
               完成後，你會知道貼近現在的是哪一型：
             </h2>
 
@@ -152,7 +114,7 @@ export default function Landing() {
 
           {/* Discovery Message */}
           <Card className="p-6 sm:p-8 bg-card border-border max-w-3xl mx-auto">
-            <p className="text-center text-foreground leading-relaxed">
+            <p className="text-center text-foreground leading-relaxed" style={{ fontFamily: "'Noto Serif TC', Georgia, serif" }}>
               你可能會發現
               <br />
               <span className="font-medium">
@@ -171,7 +133,7 @@ export default function Landing() {
           <Button
             onClick={() => navigate('/quiz')}
             size="lg"
-            className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-lg px-8 py-6"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 text-base px-8 py-6"
           >
             開始一段時光之旅 <ArrowRight className="w-5 h-5" />
           </Button>
@@ -181,7 +143,7 @@ export default function Landing() {
       {/* Footer */}
       <div className="border-t border-border bg-background/50 py-8">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>
+          <p style={{ fontFamily: "'Noto Serif TC', Georgia, serif" }}>
             這份問卷僅用於自我探索。
             <br />
             沒有標籤，沒有評價。
