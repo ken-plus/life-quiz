@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Copy, CheckCircle2, AlertCircle, ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card as UICard, CardContent } from '@/components/ui/card';
 import { useLocation, useSearch } from 'wouter';
@@ -44,34 +44,14 @@ export function Card({ card, className, size }: { card: any, className?: string,
 
 export default function ShareCards() {
   const [, navigate] = useLocation();
-  const printRef = useRef<HTMLDivElement>(null);
+  const search = useSearch();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const [lifeType, setLifeType] = useState<OperatingStyle | null>(null);
-  const [isHtml2CanvasLoaded, setIsHtml2CanvasLoaded] = useState(false);
-
-  // 動態加載 html2canvas 腳本
-  useEffect(() => {
-    if ((window as any).html2canvas) {
-      setIsHtml2CanvasLoaded(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    script.async = true;
-    script.onload = () => setIsHtml2CanvasLoaded(true);
-    document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
+  const [error, setError] = useState<string | null>(null);
 
   // 1. 從 URL 取得測驗結果
-  const search = useSearch();
   useEffect(() => {
     const params = new URLSearchParams(search);
     const typeParam = params.get('type') as OperatingStyle;
@@ -87,44 +67,149 @@ export default function ShareCards() {
           setLifeType(result.primary);
         } catch (e) {
           console.error('無法解析測驗結果', e);
-          navigate('/');
+          setError('無法載入分享卡片');
+          setIsGenerating(false);
         }
       } else {
-        navigate('/');
+        setError('無法載入分享卡片');
+        setIsGenerating(false);
       }
     }
-  }, [navigate, search]);
+  }, [search]);
 
-  // 2. 自動產生圖片邏輯 (確保能產生真正可長按儲存的 <img>)
+  // 2. 使用 Canvas 直接繪製高質感分享卡（避免跨域問題）
   useEffect(() => {
-    if (!lifeType || !printRef.current || !isHtml2CanvasLoaded) return;
+    if (!lifeType) return;
 
     const generateImage = async () => {
       try {
         setIsGenerating(true);
-        // 確保圖片已加載完成
-        const images = printRef.current?.querySelectorAll('img');
-        if (images) {
-          await Promise.all(Array.from(images).map(img => {
-            if (img.complete) return Promise.resolve();
-            return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
-          }));
+        setError(null);
+
+        const typeData = LIFE_TYPES[lifeType];
+        const resultContent = RESULT_CONTENTS[lifeType];
+        
+        // Canvas 尺寸
+        const width = 1080;
+        const height = 1440;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('無法獲取 Canvas 上下文');
+
+        // 背景色
+        ctx.fillStyle = '#FDFCFB';
+        ctx.fillRect(0, 0, width, height);
+
+        // 背景裝飾圓形（使用漸變）
+        const gradient1 = ctx.createRadialGradient(width - 200, -200, 0, width - 200, -200, 400);
+        gradient1.addColorStop(0, typeData.color + '30');
+        gradient1.addColorStop(1, typeData.color + '00');
+        ctx.fillStyle = gradient1;
+        ctx.beginPath();
+        ctx.arc(width - 200, -200, 400, 0, Math.PI * 2);
+        ctx.fill();
+
+        const gradient2 = ctx.createRadialGradient(100, height + 100, 0, 100, height + 100, 350);
+        gradient2.addColorStop(0, typeData.accentColor + '20');
+        gradient2.addColorStop(1, typeData.accentColor + '00');
+        ctx.fillStyle = gradient2;
+        ctx.beginPath();
+        ctx.arc(100, height + 100, 350, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 上方標題區
+        ctx.font = "500 28px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = typeData.accentColor + 'B3';
+        ctx.textAlign = 'center';
+        ctx.fillText('GRAVITY OF HEART SYSTEM', width / 2, 80);
+
+        // 分隔線
+        ctx.strokeStyle = typeData.accentColor + '4D';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(width / 2 - 40, 130);
+        ctx.lineTo(width / 2 + 40, 130);
+        ctx.stroke();
+
+        // 身份名稱
+        ctx.font = "700 96px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = '#2A2420';
+        ctx.fillText(typeData.displayName, width / 2, 280);
+
+        // 身份副標題
+        ctx.font = "500 40px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = typeData.accentColor;
+        ctx.fillText(typeData.roleTitle, width / 2, 360);
+
+        // 中央插畫區（使用顏色方塊代替，避免跨域圖片問題）
+        const cardHeight = 500;
+        const cardWidth = 380;
+        const cardX = (width - cardWidth) / 2;
+        const cardY = 450;
+        
+        // 卡片邊框
+        ctx.strokeStyle = typeData.accentColor + '80';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 30);
+        ctx.stroke();
+
+        // 卡片背景
+        ctx.fillStyle = typeData.color + '15';
+        ctx.beginPath();
+        ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 30);
+        ctx.fill();
+
+        // 卡片內文本
+        ctx.font = "400 32px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = '#3D342E';
+        ctx.textAlign = 'center';
+        const lines = typeData.displayName.split('');
+        ctx.fillText(typeData.displayName, width / 2, cardY + cardHeight / 2);
+
+        // 主文案區
+        ctx.font = "400 36px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = '#3D342E';
+        const mainText = resultContent.nextStepsCTA.replace(' →', '');
+        const textLines = mainText.split('\n');
+        let textY = 1050;
+        for (const line of textLines) {
+          ctx.fillText(line, width / 2, textY);
+          textY += 60;
         }
 
-        // 等待字體渲染
-        await document.fonts.ready;
+        // 底部品牌區
+        ctx.font = "700 44px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = '#2A2420';
+        ctx.textAlign = 'left';
+        ctx.fillText('時光整理所', 60, 1320);
 
-        const canvas = await (window as any).html2canvas(printRef.current!, {
-          useCORS: true, 
-          scale: 2, 
-          backgroundColor: '#FDFCFB',
-          logging: false,
-          allowTaint: true,
-        });
-        
-        setImageUrl(canvas.toDataURL('image/png', 1.0));
+        ctx.font = "400 24px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = '#8C847E';
+        ctx.fillText('探索屬於你的生活密碼', 60, 1370);
+
+        // QR Code 提示文字（右下角）
+        ctx.font = "400 20px 'Noto Serif TC', Georgia, serif";
+        ctx.fillStyle = typeData.accentColor + '99';
+        ctx.textAlign = 'right';
+        ctx.fillText('掃碼開始整理', width - 60, 1370);
+
+        // 底部分隔線
+        ctx.strokeStyle = '#E0D5C8';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(60, 1400);
+        ctx.lineTo(width - 60, 1400);
+        ctx.stroke();
+
+        // 轉換為圖片 URL
+        const imageData = canvas.toDataURL('image/png', 1.0);
+        setImageUrl(imageData);
       } catch (error) {
         console.error('圖片生成失敗:', error);
+        setError('圖片生成失敗，請重試');
       } finally {
         setIsGenerating(false);
       }
@@ -132,43 +217,32 @@ export default function ShareCards() {
 
     const timer = setTimeout(() => {
       generateImage();
-    }, 1200); // 給予足夠時間讓字體和圖片渲染
+    }, 500);
 
     return () => clearTimeout(timer);
-  }, [lifeType, isHtml2CanvasLoaded]);
+  }, [lifeType]);
 
-  if (!lifeType) {
+  if (error) {
     return (
       <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center py-8 px-4">
         <div className="text-center space-y-4">
-          <AlertCircle className="w-12 h-12 text-gray-300 mx-auto" />
-          <p className="text-gray-500">無法載入分享卡片</p>
+          <p className="text-gray-500">{error}</p>
           <Button onClick={() => navigate('/')} variant="outline">返回首頁</Button>
         </div>
       </div>
     );
   }
 
-  const typeData = LIFE_TYPES[lifeType];
-  const resultContent = RESULT_CONTENTS[lifeType];
-  const shareUrl = `${window.location.origin}/cards?type=${lifeType}`;
-  const shareText = `我是【${typeData.displayName}】，你現在是哪一型？\n\n探索你的生活節奏：${window.location.origin}\n分享圖卡：${shareUrl}`;
+  if (!lifeType) return null;
 
-  const handleCopyText = async () => {
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopyStatus('copied');
-    } catch (err) {
-      setCopyStatus('error');
-    }
-    setTimeout(() => setCopyStatus('idle'), 3000);
-  };
+  const typeData = LIFE_TYPES[lifeType];
+  const shareUrl = `${window.location.origin}/cards?type=${lifeType}`;
 
   const handleDownload = () => {
     if (!imageUrl) return;
     const link = document.createElement('a');
     link.href = imageUrl;
-    link.download = `時光整理所-你的生活密碼-${typeData.displayName}.png`;
+    link.download = `時光整理所-${typeData.displayName}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -214,91 +288,17 @@ export default function ShareCards() {
           </CardContent>
         </UICard>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button 
-            onClick={handleCopyText} 
-            className="py-6 text-sm font-medium tracking-wide transition-all bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl"
-            variant={copyStatus === 'copied' ? 'outline' : 'default'}
-          >
-            {copyStatus === 'idle' && <><Copy className="w-4 h-4 mr-2" /> 複製分享文案</>}
-            {copyStatus === 'copied' && <><CheckCircle2 className="w-4 h-4 mr-2 text-green-600" /> 已複製</>}
-            {copyStatus === 'error' && <><AlertCircle className="w-4 h-4 mr-2 text-red-500" /> 失敗</>}
-          </Button>
-
-          <Button 
-            onClick={handleDownload}
-            disabled={!imageUrl}
-            className="py-6 text-sm font-medium tracking-wide transition-all bg-white border-2 border-accent text-accent hover:bg-accent/5 rounded-xl"
-            variant="outline"
-          >
-            <Download className="w-4 h-4 mr-2" /> 儲存圖片檔案
-          </Button>
-        </div>
-
-        <div className="bg-gray-50/50 p-5 rounded-xl border border-gray-100 space-y-2">
-          <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-bold">分享預覽文案</p>
-          <p className="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">{shareText}</p>
-        </div>
-      </div>
-
-      {/* 隱藏的渲染區域 - 專門為了生成高畫質分享卡 */}
-      <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none z-[-1]">
-        <div 
-          ref={printRef} 
-          className="w-[800px] h-[1100px] bg-[#FDFCFB] flex flex-col items-center justify-between p-16 relative overflow-hidden"
-          style={{ fontFamily: "'Noto Serif TC', serif" }}
+        <Button 
+          onClick={handleDownload}
+          disabled={!imageUrl}
+          className="w-full py-6 text-sm font-medium tracking-wide transition-all bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl"
         >
-          {/* 藝術裝飾背景 */}
-          <div style={{ position: 'absolute', top: -150, right: -150, width: 500, height: 500, borderRadius: '50%', background: typeData.color, opacity: 0.12, filter: 'blur(60px)' }} />
-          <div style={{ position: 'absolute', bottom: -100, left: -100, width: 400, height: 400, borderRadius: '50%', background: typeData.accentColor, opacity: 0.08, filter: 'blur(50px)' }} />
-
-          <div className="text-center z-10 w-full">
-            <div style={{ fontSize: 16, letterSpacing: '0.4em', color: typeData.accentColor, opacity: 0.7, marginBottom: 16, fontWeight: 500 }}>GRAVITY OF HEART SYSTEM</div>
-            <div style={{ width: 80, height: 1.5, background: typeData.accentColor, margin: '0 auto 50px', opacity: 0.3 }} />
-            
-            <h1 style={{ fontSize: 72, fontWeight: 700, color: '#2A2420', marginBottom: 24, letterSpacing: '0.15em' }}>
-              {typeData.displayName}
-            </h1>
-            
-            <p style={{ fontSize: 28, color: typeData.accentColor, letterSpacing: '0.2em', fontWeight: 500, fontStyle: 'normal' }}>
-              {typeData.roleTitle}
-            </p>
-          </div>
-
-          {/* 中央插畫預覽區 */}
-          <div className="w-full flex justify-center items-center z-10 my-8">
-            <div className="w-[450px] rounded-2xl overflow-hidden shadow-2xl border-[12px] border-white">
-              <img 
-                src={cards.find(c => c.id === lifeType)?.image} 
-                alt={typeData.displayName}
-                className="w-full h-auto"
-                crossOrigin="anonymous"
-              />
-            </div>
-          </div>
-
-          <div className="w-full max-w-xl z-10">
-            <p style={{ fontSize: 24, lineHeight: 2.0, color: '#3D342E', textAlign: 'center', whiteSpace: 'pre-line', fontWeight: 400, letterSpacing: '0.05em' }}>
-              {resultContent.nextStepsCTA.replace(' →', '')}
-            </p>
-          </div>
-
-          <div className="w-full flex justify-between items-end z-10 mt-12 pt-12 border-t border-gray-100">
-            <div className="flex flex-col">
-              <p style={{ fontSize: 32, fontWeight: 700, color: '#2A2420', marginBottom: 8, letterSpacing: '0.1em' }}>時光整理所</p>
-              <p style={{ fontSize: 18, color: '#8C847E', letterSpacing: '0.05em' }}>探索屬於你的生活密碼</p>
-            </div>
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=3D342E&data=${encodeURIComponent(shareUrl)}`}
-                alt="QR Code"
-                className="w-24 h-24"
-                crossOrigin="anonymous"
-              />
-            </div>
-          </div>
-        </div>
+          <Download className="w-4 h-4 mr-2" /> 儲存圖片
+        </Button>
       </div>
+
+      {/* 隱藏的 Canvas 參考 */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
     </div>
   );
 }
