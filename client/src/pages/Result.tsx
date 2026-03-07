@@ -143,9 +143,11 @@ export default function Result() {
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('無法獲取 Canvas 上下文');
 
-        // 背景 - 使用更清透的色調
+        // 背景 - 使用明亮的品牌色調，確保不被 CSS 深色模式影響
         ctx.fillStyle = cfg.bg;
+        ctx.globalAlpha = 1.0;  // 確保背景完全不透明
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1.0;  // 重置 globalAlpha
 
         // 背景裝飾圓形 - 降低不透明度，增加明亮感
         const gradient1 = ctx.createRadialGradient(canvas.width - 100, -100, 0, canvas.width - 100, -100, 300);
@@ -468,7 +470,9 @@ export default function Result() {
             variant="outline"
             onClick={() => {
               setCurrentPage(1);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              document.body.scrollTop = 0;
+              document.documentElement.scrollTop = 0;
             }}
             disabled={currentPage === 1}
             className="gap-2"
@@ -483,7 +487,9 @@ export default function Result() {
           <Button
             onClick={() => {
               setCurrentPage(2);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              document.body.scrollTop = 0;
+              document.documentElement.scrollTop = 0;
             }}
             disabled={currentPage === 2}
             className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
