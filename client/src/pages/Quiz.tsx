@@ -42,7 +42,8 @@ export default function Quiz() {
         }
       }, 250);
     }, 400);
-  }, [answers, currentQuestion.id, currentQuestionIndex, navigate]);
+  }, [currentQuestion.id, currentQuestionIndex, navigate]);
+
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
@@ -143,7 +144,13 @@ export default function Quiz() {
             )}
             {isLastQuestion && answers[currentQuestion.id] !== undefined && (
               <button
-                onClick={() => navigate(`/result?answers=${encodeURIComponent(JSON.stringify(answers))}`)}
+                onClick={() => {
+                  const finalAnswers = {
+                    ...answers,
+                    [currentQuestion.id]: answers[currentQuestion.id],
+                  };
+                  navigate(`/result?answers=${encodeURIComponent(JSON.stringify(finalAnswers))}`);
+                }}
                 className="text-sm font-medium text-accent hover:text-accent/80 transition-colors py-2 px-3 rounded-lg"
               >
                 查看結果 →

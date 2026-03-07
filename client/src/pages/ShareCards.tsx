@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Copy, CheckCircle2, AlertCircle, ArrowLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card as UICard, CardContent } from '@/components/ui/card';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import { LIFE_TYPES, OperatingStyle, calculateLifeType } from '@/lib/quizData';
+import { RESULT_CONTENTS } from '@/lib/resultContent';
 
 // 定義分享卡片清單
 export const cards = [
@@ -70,8 +71,9 @@ export default function ShareCards() {
   }, []);
 
   // 1. 從 URL 取得測驗結果
+  const search = useSearch();
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(search);
     const typeParam = params.get('type') as OperatingStyle;
     
     if (typeParam && LIFE_TYPES[typeParam]) {
@@ -91,7 +93,7 @@ export default function ShareCards() {
         navigate('/');
       }
     }
-  }, [navigate]);
+  }, [navigate, search]);
 
   // 2. 自動產生圖片邏輯 (確保能產生真正可長按儲存的 <img>)
   useEffect(() => {
@@ -135,9 +137,20 @@ export default function ShareCards() {
     return () => clearTimeout(timer);
   }, [lifeType, isHtml2CanvasLoaded]);
 
-  if (!lifeType) return null;
+  if (!lifeType) {
+    return (
+      <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center py-8 px-4">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-gray-300 mx-auto" />
+          <p className="text-gray-500">無法載入分享卡片</p>
+          <Button onClick={() => navigate('/')} variant="outline">返回首頁</Button>
+        </div>
+      </div>
+    );
+  }
 
   const typeData = LIFE_TYPES[lifeType];
+  const resultContent = RESULT_CONTENTS[lifeType];
   const shareUrl = `${window.location.origin}/cards?type=${lifeType}`;
   const shareText = `我是【${typeData.displayName}】，你現在是哪一型？\n\n探索你的生活節奏：${window.location.origin}\n分享圖卡：${shareUrl}`;
 
@@ -266,9 +279,7 @@ export default function ShareCards() {
 
           <div className="w-full max-w-xl z-10">
             <p style={{ fontSize: 24, lineHeight: 2.0, color: '#3D342E', textAlign: 'center', whiteSpace: 'pre-line', fontWeight: 400, letterSpacing: '0.05em' }}>
-              生活中的每個選擇，<br />
-              都是你在為自己整理出，<br />
-              最舒適的生命節奏。
+              {resultContent.nextStepsCTA.replace(' →', '')}
             </p>
           </div>
 
@@ -279,9 +290,10 @@ export default function ShareCards() {
             </div>
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=3D342E&data=${encodeURIComponent(window.location.origin)}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=3D342E&data=${encodeURIComponent(shareUrl)}`}
                 alt="QR Code"
                 className="w-24 h-24"
+                crossOrigin="anonymous"
               />
             </div>
           </div>

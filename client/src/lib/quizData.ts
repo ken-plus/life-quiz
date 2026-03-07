@@ -21,7 +21,7 @@ export interface QuizQuestion {
   id: number;
   question: string;
   options: QuizOption[];
-  weighted?: boolean;
+
 }
 
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
@@ -38,7 +38,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 2,
     question: '進家門看到家人的瞬間，你的第一反應是？',
-    weighted: true,
+
     options: [
       { type: 'balancer', text: '情感偵測 📡（看臉色模式啟動，先湊過去蹭蹭？）' },
       { type: 'builder', text: '劇本預演 🎞️（這幕好熟悉，接下來 10 年大概也這樣過。）' },
@@ -69,7 +69,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 5,
     question: '當你崩潰喊出「我想回家」時，你真正渴望的是？',
-    weighted: true,
+
     options: [
       { type: 'explorer', text: '視覺排毒 ✨（東西都在該在的位置，世界終於安靜了。）' },
       { type: 'guardian', text: '靈魂卸妝 👺（撕掉社會面具，當一坨軟爛的有機物。）' },
@@ -90,7 +90,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 7,
     question: '閉上眼想像「理想的家」，你第一個看到的畫面是？',
-    weighted: true,
+
     options: [
       { type: 'builder', text: '高效指揮中心 🛰️（生活按部就班，一切都在精準規律中。）' },
       { type: 'explorer', text: '樣品屋範本 ✨（極簡、無雜物、視覺舒適度 100 分。）' },
@@ -111,7 +111,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 9,
     question: '突發狀況發生！（如打破東西、趕不上車）你的本能反應是？',
-    weighted: true,
+
     options: [
       { type: 'balancer', text: '先管別人 🙋（馬上看旁邊：「你還好嗎？嚇到了嗎？」）' },
       { type: 'guardian', text: '自我觀測 🧘（先停下 3 秒，感受一下心跳跟情緒。）' },
@@ -142,7 +142,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 12,
     question: '終於放假了！把時間「浪費」在哪裡你最心甘情願？',
-    weighted: true,
+
     options: [
       { type: 'guardian', text: '身體維修 💆（按摩、睡死、發呆，修復度 100%。）' },
       { type: 'explorer', text: '空間排毒 🧹（大掃除、斷捨離，看著家裡變亮就爽。）' },
@@ -203,7 +203,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 18,
     question: '在你要「拯救世界（照顧別人）」之前，必做的確認是？',
-    weighted: true,
+
     options: [
       { type: 'explorer', text: '地基檢查 🏗️（我的生活穩嗎？別為了救人自己先溺水。）' },
       { type: 'builder', text: '脫軌風險 🛤️（這份熱心，會不會讓我偏離原本的航道？）' },
@@ -234,7 +234,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 21,
     question: '最後一題！選一句話送給努力到現在的自己：',
-    weighted: true,
+
     options: [
       { type: 'balancer', text: '愛與連結，是生命中最滋養的養分。❤️' },
       { type: 'builder', text: '我不著急，因為我知道每一步都走在對的路上。🗺️' },

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LIFE_TYPES, calculateLifeType, OperatingStyle } from '@/lib/quizData';
 import { RESULT_CONTENTS } from '@/lib/resultContent';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import { Share2, ArrowLeft, ChevronRight, ChevronLeft, Copy, Check } from 'lucide-react';
 import { Card as ShareCard, cards as shareCards } from './ShareCards';
 
@@ -78,6 +78,7 @@ const typeConfig: Record<string, {
 
 export default function Result() {
   const [, navigate] = useLocation();
+  const search = useSearch();
   const [lifeType, setLifeType] = useState<OperatingStyle | null>(null);
   const [isMixed, setIsMixed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,7 +86,7 @@ export default function Result() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(search);
     const answersParam = params.get('answers');
 
     if (answersParam) {
@@ -103,7 +104,7 @@ export default function Result() {
     }
 
     setIsLoading(false);
-  }, [navigate]);
+  }, [navigate, search]);
 
   if (isLoading || !lifeType) {
     return (
@@ -342,52 +343,52 @@ export default function Result() {
                       const QUIZ_URL = window.location.origin;
                       const QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=8B7355&bgcolor=F5F0E8&data=${encodeURIComponent(QUIZ_URL)}`;
                       return (
-                        <div style={{
-                          width: '100%', maxWidth: 480, position: 'relative', overflow: 'hidden',
-                          borderRadius: 16, fontFamily: "'Noto Serif TC', Georgia, serif",
-                          boxShadow: '0 4px 24px rgba(100,80,60,0.15)',
-                          background: cfg.bg,
-                        }}>
-                          {/* 背景裝飾 */}
-                          <div style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: cfg.orb1, opacity: 0.2 }} />
-                          <div style={{ position: 'absolute', bottom: -30, left: -30, width: 130, height: 130, borderRadius: '50%', background: cfg.orb2, opacity: 0.18 }} />
+                    <div style={{
+                      width: '100%', maxWidth: 480, position: 'relative', overflow: 'hidden',
+                      borderRadius: 16, fontFamily: "'Noto Serif TC', Georgia, serif",
+                      boxShadow: '0 4px 24px rgba(100,80,60,0.15)',
+                      background: cfg.bg,
+                    }}>
+                      {/* 背景裝飾 */}
+                      <div style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: cfg.orb1, opacity: 0.2 }} />
+                      <div style={{ position: 'absolute', bottom: -30, left: -30, width: 130, height: 130, borderRadius: '50%', background: cfg.orb2, opacity: 0.18 }} />
 
-                          <div style={{ padding: '32px 28px', position: 'relative' }}>
-                            {/* 上方 header */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-                              <div>
-                                <div style={{ fontSize: 10, letterSpacing: '0.18em', color: cfg.subColor, opacity: 0.8, marginBottom: 4 }}>
-                                  Gravity of Heart System
-                                </div>
-                                <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.08em', color: cfg.textColor }}>
-                                  {cfg.zhName}
-                                </div>
-                              </div>
-                              <div style={{ width: 30, height: 1.5, background: cfg.accent, opacity: 0.5, marginTop: 14 }} />
+                      <div style={{ padding: '32px 28px', position: 'relative' }}>
+                        {/* 上方 header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                          <div>
+                            <div style={{ fontSize: 10, letterSpacing: '0.18em', color: cfg.subColor, opacity: 0.8, marginBottom: 4 }}>
+                              Gravity of Heart System
                             </div>
-
-                            {/* 主文字：sharingPrompt */}
-                            <div style={{ fontSize: 15, lineHeight: 1.9, color: cfg.textColor, letterSpacing: '0.04em', marginBottom: 28, whiteSpace: 'pre-line' }}>
-                              {content.sharingPrompt}
-                            </div>
-
-                            {/* 底部：分隔線 + QR */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                              <div>
-                                <div style={{ fontSize: 11, color: cfg.subColor, letterSpacing: '0.1em', opacity: 0.75, marginBottom: 6 }}>
-                                  {cfg.tagline}
-                                </div>
-                                <div style={{ width: 30, height: 1, background: cfg.accent, opacity: 0.35 }} />
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                                <div style={{ padding: 5, background: cfg.bg, borderRadius: 6, border: `1px solid ${cfg.accent}33` }}>
-                                  <img src={QR_URL} width={60} height={60} alt="QR" style={{ display: 'block' }} />
-                                </div>
-                                <div style={{ fontSize: 8, color: cfg.subColor, letterSpacing: '0.1em', opacity: 0.6 }}>掃碼開始整理</div>
-                              </div>
+                            <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.08em', color: cfg.textColor }}>
+                              {cfg.zhName}
                             </div>
                           </div>
+                          <div style={{ width: 30, height: 1.5, background: cfg.accent, opacity: 0.5, marginTop: 14 }} />
                         </div>
+
+                        {/* 主文字：sharingPrompt */}
+                        <div style={{ fontSize: 15, lineHeight: 1.9, color: cfg.textColor, letterSpacing: '0.04em', marginBottom: 28, whiteSpace: 'pre-line' }}>
+                          {content.sharingPrompt}
+                        </div>
+
+                        {/* 底部：掃碼文案（根據類型動態生成） */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div>
+                            <div style={{ fontSize: 11, color: cfg.subColor, letterSpacing: '0.1em', opacity: 0.75, marginBottom: 6 }}>
+                              {content.nextStepsCTA.replace(' →', '')}
+                            </div>
+                            <div style={{ width: 30, height: 1, background: cfg.accent, opacity: 0.35 }} />
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                            <div style={{ padding: 5, background: cfg.bg, borderRadius: 6, border: `1px solid ${cfg.accent}33` }}>
+                              <img src={QR_URL} width={60} height={60} alt="QR" style={{ display: 'block' }} />
+                            </div>
+                            <div style={{ fontSize: 8, color: cfg.subColor, letterSpacing: '0.1em', opacity: 0.6 }}>掃碼開始整理</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                       );
                     })()}
                   </div>
