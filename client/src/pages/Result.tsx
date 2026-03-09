@@ -302,19 +302,24 @@ export default function Result() {
               </Button>
             </div>
 
-            {/* 下一步 - 統一導向 Line OA */}
+            {/* 下一步 - 各類型專屬文案 + 統一 Line OA 導向 */}
             <div className="mb-12">
-              <Card className="p-8 border-border bg-card text-center">
-                <p className="text-foreground leading-relaxed mb-6 text-lg">
-                  如果你準備好了，我在 LINE 這裡等你。
+              <Card className="p-8 border-border bg-card">
+                <p className="text-foreground leading-relaxed mb-8 whitespace-pre-line text-lg">
+                  {content.nextSteps}
                 </p>
-                <Button
-                  onClick={handleGoToLineOA}
-                  className="w-full py-6 text-base font-medium"
-                  style={{ backgroundColor: cfg.accentColor, color: '#FFFFFF' }}
-                >
-                  開始下一步對話
-                </Button>
+                <div className="text-center">
+                  <p className="text-foreground leading-relaxed mb-6 text-lg font-medium">
+                    如果你準備好了，我在 LINE 這裡等你。
+                  </p>
+                  <Button
+                    onClick={handleGoToLineOA}
+                    className="w-full py-6 text-base font-medium"
+                    style={{ backgroundColor: cfg.accentColor, color: '#FFFFFF' }}
+                  >
+                    開始下一步對話
+                  </Button>
+                </div>
               </Card>
             </div>
 
